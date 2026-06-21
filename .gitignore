@@ -1,0 +1,18 @@
+# all
+.build*
+
+# c/cc
+*.o
+a.out
+
+# vim
+*.swo
+*.swp
+
+# mac
+.DS_Store
+
+# tex
+*.aux
+*.log
+
