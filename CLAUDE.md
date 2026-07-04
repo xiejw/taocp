@@ -13,6 +13,8 @@ Algorithms implemented:
 - **Satisfiability**: SAT by Watching (V4 7.2.2.2B)
 - **Graph Algorithms**: Strong Components (V4 7.4.1.2T), All Hamiltonian Cycles (V4 7.2.2.4H)
 
+See `TODO.md` for modules that are still scaffolding without a real implementation.
+
 ## Commands
 
 ### Build and Test (from project root)
