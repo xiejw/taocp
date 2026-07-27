@@ -2,6 +2,7 @@ MODS    += ${BUILD_OBJS}/log.o
 MODS    += ${BUILD_OBJS}/sat_literal.o
 MODS    += ${BUILD_OBJS}/sat_cdcl.o
 
+# This generates CMD_template by default.
 MAIN_OUT = main
 
 TEST_OUT = test_main
