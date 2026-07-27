@@ -1,1 +1,1 @@
-../mk/Makefile.v2
+../../src/mk/Makefile.v2

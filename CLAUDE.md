@@ -45,14 +45,14 @@ cd notes && make run    # Build PDF documentation
 
 ## Architecture
 
-Each algorithm lives in its own directory named `v{volume}_{section}.algo_{letter}_{description}/`. Modules are self-contained and build independently.
+Each algorithm lives in its own directory named `src/v{volume}/v{volume}_{section}.algo_{letter}_{description}/`. Modules are self-contained and build independently.
 
 **Source layout within each module:**
 - `cmd/main.cc` — algorithm implementation (the core TAOCP translation)
 - `cmd/*_test.cc` — additional test binaries (when present)
 - `src/*.cc`, `src/*.h` — shared utilities: logging (`log.h/cc`), graph structures (`graph_sgb.cc`), data structures
 
-**Build templates** (in `mk/`):
+**Build templates** (in `src/mk/`):
 - `Makefile.v1` — single binary per module
 - `Makefile.v2` — supports multiple test binaries via `TEST_template` and `CMD_template` macros
 
