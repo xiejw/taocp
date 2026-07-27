@@ -40,7 +40,7 @@ make ASAN=1 test        # Test with Address Sanitizer
 ### Notes / LaTeX documentation
 
 ```bash
-cd notes && make run    # Build PDF documentation
+cd doc/notes && make run    # Build PDF documentation
 ```
 
 ## Architecture
