@@ -11,7 +11,7 @@ Algorithms implemented:
 - **Backtracking**: Basic Backtrack (V4 7.2.2B), Walker's Backtrack (V4 7.2.2W)
 - **Exact Cover**: Dancing Links / Algorithm X (V4 7.2.2.1X)
 - **Satisfiability**: SAT by Watching (V4 7.2.2.2B)
-- **Graph Algorithms**: Strong Components (V4 7.4.1.2T), All Hamiltonian Cycles (V4 7.2.2.4H)
+- **Graph Algorithms**: Strong Components (V4 7.4.1.2T)
 
 See `TODO.md` for modules that are still scaffolding without a real implementation.
 
@@ -64,5 +64,5 @@ All binaries output to `.build/` within each module directory.
 - **1-based arrays**: Arrays are allocated with one extra slot and indexed from 1, matching TAOCP notation.
 - **MEMs metric**: Performance is measured in memory accesses (Knuth's MEMs). Instrumented via `mem_access_counter`.
 - **`forge:` comments**: Mark files for checksum checks..
-- **C++17** with `-Wall -Werror -pedantic -Wextra -fno-rtti -fno-exceptions`.
+- **C++17** with `-Wall -Werror -pedantic -Wextra -Wfatal-errors -Wconversion -fno-rtti -fno-exceptions`.
 - Multi-language implementations exist for some modules (Go in `go/`, Rust in `rs/`).
