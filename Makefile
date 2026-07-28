@@ -15,7 +15,7 @@ compile:
 		make --no-print-directory -C $$m compile;         \
 		done
 
-test:
+test: test_forge_version
 ifdef ASAN
 	@set -e; for m in $(MODS); do                             \
 		make --no-print-directory -C $$m ASAN=1 test;     \
@@ -40,3 +40,6 @@ release:
 	@set -e; for m in $(MODS); do                             \
 		make --no-print-directory -C $$m release;         \
 		done
+
+test_forge_version:
+	go run tools/forge_version_tag_checker.go

@@ -16,21 +16,37 @@
 // near the top; reading only 5 lines keeps the scan cheap on large trees).
 // It looks for a line matching the tag pattern above (leading/trailing
 // whitespace ignored). ".git" and any directory named ".build" (build
-// output, not source) are skipped during the walk.
+// output, not source) are skipped during the walk. Independently, the
+// tool also computes a SHA-256 checksum over each file's full contents —
+// except for files tagged "skip", whose checksum is never used (see
+// below) and so is left blank to avoid the wasted read.
 //
 // Every scanned file is reported, one line to stdout, in fixed-width
 // columns (full path padded to 80 chars, base name padded to 20 chars,
-// then the tag) so that output lines up for easy scanning/diffing:
+// tag padded to 6 chars, then the checksum) so that output lines up for
+// easy scanning/diffing:
 //
-//	<full path (80)>  <base name (20)>  <tag>
+//	<full path (80)>  <base name (20)>  <tag (6)>  <checksum>
 //
 // where <tag> is "v0", "v1", ..., "skip", or "none". A tag of "none" means
 // no forge tag was found in the file's first 5 lines, which is treated as
-// an error: every .h/.cc file is expected to carry one. After the full
-// report is printed, if any file has tag "none", their full paths are
-// listed again on stderr and the tool exits with a non-zero status, so the
-// failure is visible to scripts/CI and the offending files are easy to spot
-// without scrolling back through the full report.
+// an error: every .h/.cc file is expected to carry one.
+//
+// In addition, files are grouped by the tuple (base name, version tag)
+// where base name includes the file extension (e.g. "log.h") and version
+// tag is a "vN" tag (files tagged "skip" or "none" are not grouped, since
+// they are not expected to track a shared version). Every file sharing a
+// (base name, version) tuple is expected to be an identical copy — e.g.
+// every module's "log.h" tagged "forge:v2" — so within each group all
+// checksums must match. A mismatch is treated as an error: the group has
+// drifted out of sync even though the version tags claim otherwise.
+//
+// After the full report is printed, any file with tag "none" and any
+// (base name, version) group with a checksum mismatch are listed again on
+// stderr and the tool exits with a non-zero status, so the failure is
+// visible to scripts/CI and the offending files are easy to spot without
+// scrolling back through the full report. If both checks pass, "OK" is
+// printed to stdout as the last line and the tool exits with status 0.
 //
 // Results are sorted by base name (ascending), then by tag (ascending), so
 // that files sharing a name (e.g. every module's "log.h") are grouped
@@ -43,7 +59,10 @@ package main
 
 import (
 	"bufio"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -53,13 +72,16 @@ import (
 )
 
 const noTag = "none"
+const skipTag = "skip"
 
-var forgeTagRE = regexp.MustCompile(`^//\s*forge:(v\d+|skip)\s*$`)
+var forgeTagRE = regexp.MustCompile(`^//\s*forge:(v\d+|` + skipTag + `)\s*$`)
+var versionTagRE = regexp.MustCompile(`^v\d+$`)
 
 type result struct {
 	fullPath string
 	baseName string
 	tag      string
+	checksum string
 }
 
 func main() {
@@ -81,10 +103,17 @@ func main() {
 
 	var missing []string
 	for _, r := range results {
-		fmt.Printf("%-80s  %-20s  %s\n", r.fullPath, r.baseName, r.tag)
+		fmt.Printf("%-80s  %-20s  %-6s  %s\n", r.fullPath, r.baseName, r.tag, r.checksum)
 		if r.tag == noTag {
 			missing = append(missing, r.fullPath)
 		}
+	}
+
+	mismatches := checksumMismatches(results)
+
+	if len(missing) == 0 && len(mismatches) == 0 {
+		fmt.Println("OK")
+		return
 	}
 
 	if len(missing) > 0 {
@@ -92,8 +121,70 @@ func main() {
 		for _, path := range missing {
 			fmt.Fprintln(os.Stderr, "  ", path)
 		}
-		os.Exit(1)
 	}
+
+	if len(mismatches) > 0 {
+		fmt.Fprintln(os.Stderr, "forge_version_tag_check: checksum mismatch within (base name, version) group:")
+		for _, g := range mismatches {
+			fmt.Fprintf(os.Stderr, "  %s %s\n", g.baseName, g.tag)
+			for _, r := range g.entries {
+				fmt.Fprintf(os.Stderr, "    %s  %s\n", r.checksum, r.fullPath)
+			}
+		}
+	}
+
+	os.Exit(1)
+}
+
+// groupKey identifies a (base name, version tag) tuple that is expected to
+// share a single checksum across all matching files.
+type groupKey struct {
+	baseName string
+	tag      string
+}
+
+type mismatchGroup struct {
+	baseName string
+	tag      string
+	entries  []result
+}
+
+// checksumMismatches groups results by (base name, version tag) — skipping
+// files tagged "skip" or "none", which are not expected to track a shared
+// version — and returns, sorted by base name then tag, every group whose
+// members do not all share the same checksum.
+func checksumMismatches(results []result) []mismatchGroup {
+	groups := make(map[groupKey][]result)
+	for _, r := range results {
+		if !versionTagRE.MatchString(r.tag) {
+			continue
+		}
+		key := groupKey{baseName: r.baseName, tag: r.tag}
+		groups[key] = append(groups[key], r)
+	}
+
+	var mismatches []mismatchGroup
+	for key, entries := range groups {
+		for _, e := range entries[1:] {
+			if e.checksum != entries[0].checksum {
+				mismatches = append(mismatches, mismatchGroup{
+					baseName: key.baseName,
+					tag:      key.tag,
+					entries:  entries,
+				})
+				break
+			}
+		}
+	}
+
+	sort.Slice(mismatches, func(i, j int) bool {
+		if mismatches[i].baseName != mismatches[j].baseName {
+			return mismatches[i].baseName < mismatches[j].baseName
+		}
+		return mismatches[i].tag < mismatches[j].tag
+	})
+
+	return mismatches
 }
 
 func scan(root string) ([]result, error) {
@@ -121,10 +212,19 @@ func scan(root string) ([]result, error) {
 			return err
 		}
 
+		var checksum string
+		if tag != skipTag {
+			checksum, err = fileChecksum(path)
+			if err != nil {
+				return err
+			}
+		}
+
 		results = append(results, result{
 			fullPath: path,
 			baseName: filepath.Base(path),
 			tag:      tag,
+			checksum: checksum,
 		})
 		return nil
 	})
@@ -156,4 +256,21 @@ func firstForgeTag(path string) (string, error) {
 	}
 
 	return noTag, nil
+}
+
+// fileChecksum returns the hex-encoded SHA-256 checksum of path's full
+// contents.
+func fileChecksum(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(h.Sum(nil)), nil
 }

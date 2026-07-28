@@ -1,4 +1,4 @@
-
+// forge:skip
 namespace {
 
 #define SIZE 9
