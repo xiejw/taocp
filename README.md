@@ -53,6 +53,7 @@ and "uncovering" of rows and columns—incredibly efficient.
 |Algorithm List|
 | :--- |
 | V4 7.2.2.2B Satisfiability by Watching|
+| V4 7.2.2.2C CDCL (WIP)|
 
 Algorithm B is an elegant optimization for CNF-based solvers that improves
 efficiency by monitoring only one "watched" literal per clause. Since the solver

@@ -54,7 +54,7 @@
 //
 // Usage: run from the directory to scan, e.g. from the repo root:
 //
-//	go run tools/forge_version_tag_check.go
+//	go run tools/forge_version_tag_checker.go
 package main
 
 import (

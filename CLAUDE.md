@@ -10,10 +10,10 @@ Algorithms implemented:
 - **Boolean Basics**: Horn Functions (V4 7.1.1C), 2-SAT via Strongly Connected Components (V4 7.1.1 Theorem K)
 - **Backtracking**: Basic Backtrack (V4 7.2.2B), Walker's Backtrack (V4 7.2.2W)
 - **Exact Cover**: Dancing Links / Algorithm X (V4 7.2.2.1X)
-- **Satisfiability**: SAT by Watching (V4 7.2.2.2B)
+- **Satisfiability**: SAT by Watching (V4 7.2.2.2B), CDCL (V4 7.2.2.2C, WIP — see `roadmap/TODO.md`)
 - **Graph Algorithms**: Strong Components (V4 7.4.1.2T)
 
-See `TODO.md` for modules that are still scaffolding without a real implementation.
+See `roadmap/TODO.md` for modules that are still scaffolding without a real implementation.
 
 ## Commands
 
