@@ -1,4 +1,4 @@
-// forge:v1
+// forge:v2
 #include "sat_literal.h"
 
 #include <stdio.h>

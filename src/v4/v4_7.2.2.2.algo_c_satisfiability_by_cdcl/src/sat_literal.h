@@ -1,5 +1,5 @@
 // vim: ft=cpp
-// forge:v1
+// forge:v2
 #pragma once
 
 #include <vector>
