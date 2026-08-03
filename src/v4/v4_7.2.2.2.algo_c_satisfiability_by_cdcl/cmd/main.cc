@@ -8,21 +8,23 @@
 using taocp::C;
 using taocp::CDCLSolver;
 using taocp::literal_t;
-using taocp::PrintClause;
+using taocp::printClause;
 
 namespace {
 
 auto
-RunSolver( ) -> void
+runSolver( ) -> void
 {
         INFO( "==== --- Demo Problem for Algorithm C --- ===" );
         INFO( "==== --- Satisfiability by CDCL --------- ===" );
+
+        // Emit clause
 }
 }  // namespace
 
 int
 main( )
 {
-        RunSolver( );
+        runSolver( );
         return 0;
 }

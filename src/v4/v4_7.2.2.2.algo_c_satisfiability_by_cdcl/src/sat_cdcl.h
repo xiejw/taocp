@@ -28,8 +28,8 @@ class CDCLSolver {
 
       public:
         /* === --- Conform Base Class ----------------------------------- === */
-        void EmitClause( size_t size, const literal_t * );
-        void EmitClause( std::initializer_list<literal_t> );
+        auto emitClause( size_t size, const literal_t * ) -> void;
+        auto emitClause( std::initializer_list<literal_t> ) -> void;
         auto searchOneSolution( ) -> std::optional<std::vector<literal_t>>;
 };
 }  // namespace taocp

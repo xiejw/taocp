@@ -15,19 +15,19 @@ C( literal_t c ) -> literal_t
 }
 
 auto
-DecodeRawLiteralValue( literal_t c ) -> literal_t
+decodeRawLiteralValue( literal_t c ) -> literal_t
 {
         return c & ( ~mask );
 }
 
 auto
-IsLiteralComplement( literal_t c ) -> bool
+isLiteralComplement( literal_t c ) -> bool
 {
         return c & mask;
 }
 
 auto
-PrintClause( size_t size, const literal_t *lits ) -> void
+printClause( size_t size, const literal_t *lits ) -> void
 {
         if ( size == 0 ) {
                 printf( "(empty literals)\n" );
@@ -37,9 +37,9 @@ PrintClause( size_t size, const literal_t *lits ) -> void
         printf( "< " );
         for ( size_t x = 0; x < size; x++ ) {
                 auto i = lits[x];
-                if ( IsLiteralComplement( i ) )
+                if ( isLiteralComplement( i ) )
                         printf( "C(%3" PRI_literal "), ",
-                                DecodeRawLiteralValue( i ) );
+                                decodeRawLiteralValue( i ) );
                 else
                         printf( "%3" PRI_literal ", ", i );
         }

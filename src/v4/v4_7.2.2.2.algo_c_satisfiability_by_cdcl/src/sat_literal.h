@@ -31,7 +31,7 @@ using literal_t = size_t;
 
 auto C( literal_t c ) -> literal_t;
 
-auto DecodeRawLiteralValue( literal_t c ) -> literal_t;
-auto IsLiteralComplement( literal_t c ) -> bool;
-auto PrintClause( size_t size, const literal_t * ) -> void;
+auto decodeRawLiteralValue( literal_t c ) -> literal_t;
+auto isLiteralComplement( literal_t c ) -> bool;
+auto printClause( size_t size, const literal_t * ) -> void;
 }  // namespace taocp

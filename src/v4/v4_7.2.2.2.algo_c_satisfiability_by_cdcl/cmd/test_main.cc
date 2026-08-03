@@ -6,10 +6,19 @@
 
 using taocp::C;
 using taocp::CDCLSolver;
+using taocp::decodeRawLiteralValue;
+using taocp::isLiteralComplement;
 
-FORGE_TEST( simple )
+FORGE_TEST( Complement )
 {
-        /* clauses
+        auto c = C( 1 );
+        EXPECT_TRUE( decodeRawLiteralValue( c ) == 1, "decode" );
+        EXPECT_TRUE( isLiteralComplement( c ) == true, "isC" );
+}
+
+FORGE_TEST( Simple )
+{
+        /* Clauses
          * 1
          * 1 c2
          * 2 c3
@@ -19,10 +28,10 @@ FORGE_TEST( simple )
          */
         CDCLSolver sov{ };
 
-        // sov.EmitClause( { ( 1 ) } );
-        // sov.EmitClause( { 1, C( 2 ) } );
-        // sov.EmitClause( { 2, C( 3 ) } );
-        // sov.EmitClause( { 2, 3 } );
+        sov.emitClause( { ( 1 ) } );
+        sov.emitClause( { 1, C( 2 ) } );
+        sov.emitClause( { 2, C( 3 ) } );
+        sov.emitClause( { 2, 3 } );
 
         auto res = sov.searchOneSolution( );
 

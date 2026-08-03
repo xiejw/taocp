@@ -15,4 +15,9 @@ CDCLSolver::searchOneSolution( ) -> std::optional<std::vector<literal_t>>
         return std::nullopt;
 }
 
+void
+CDCLSolver::emitClause( std::initializer_list<literal_t> )
+{
+}
+
 }  // namespace taocp
