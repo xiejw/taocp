@@ -44,8 +44,13 @@ endif
 
 # === --- Actions----------------------------------------------------------- ===
 
+test: test_title
+
+test_title:
+	@printf "\e[1;35m▶ RUNNING  %s\e[0m\n" "$(notdir $(CURDIR))"
+
 run: compile
-	${BUILD}/${MAIN_OUT}
+	@${BUILD}/${MAIN_OUT}
 
 compile: ${BUILD}/${MAIN_OUT}
 

@@ -64,6 +64,11 @@ endif
 
 # === --- Actions----------------------------------------------------------- ===
 
+test: test_title
+
+test_title:
+	@printf "\e[1;35m▶ RUNNING  %s\e[0m\n" "$(notdir $(CURDIR))"
+
 run: compile
 	${BUILD}/${MAIN_OUT}
 
@@ -88,8 +93,8 @@ endef
 define TEST_template
 
 test_$(1): compile $${BUILD}/$(1)
-	@printf "\e[42m%*s\e[0m\n" "$$(shell tput cols)" ""
-	$${BUILD}/$(1)
+	@printf "\e[1;36m▶ RUNNING  %s\e[0m\n" "$(1)"
+	@$${BUILD}/$(1)
 
 test: test_$(1)
 

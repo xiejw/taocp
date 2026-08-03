@@ -9,4 +9,10 @@
 
 namespace taocp {
 
+auto
+CDCLSolver::searchOneSolution( ) -> std::optional<std::vector<literal_t>>
+{
+        return std::nullopt;
+}
+
 }  // namespace taocp

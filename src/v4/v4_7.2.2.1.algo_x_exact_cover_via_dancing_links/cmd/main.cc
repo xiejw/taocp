@@ -344,7 +344,7 @@ main( void )
         size_t sol[9 * 9];
         size_t num_sol  = 0;
         auto   visit_fn = []( void *user_data, size_t solution_size,
-                            size_t *user_solution ) {
+                              size_t *user_solution ) {
                 (void)user_solution;  // Unused
 
                 *( (size_t *)user_data ) = solution_size;

@@ -1,7 +1,8 @@
 // forge:skip
+#include "test_macros.h"
+
 #include "sat_cdcl.h"
 #include "sat_literal.h"
-#include "test_macros.h"
 
 using taocp::C;
 using taocp::CDCLSolver;
@@ -16,14 +17,14 @@ FORGE_TEST( simple )
          *
          * answer is 1 2 any 3
          */
-        // WatchSolver sov{ /*num_literals=*/3, /*num_causes=*/4 };
+        CDCLSolver sov{ };
 
         // sov.EmitClause( { ( 1 ) } );
         // sov.EmitClause( { 1, C( 2 ) } );
         // sov.EmitClause( { 2, C( 3 ) } );
         // sov.EmitClause( { 2, 3 } );
 
-        // auto res = sov.SearchOneSolution( );
+        auto res = sov.searchOneSolution( );
 
         // EXPECT_TRUE( bool( res ) == true, "has answer" );
         // EXPECT_TRUE( res.value( ).size( ) == 3, "3 eles" );
