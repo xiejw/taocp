@@ -214,9 +214,9 @@ Exit:  // Exit routine
 }  // namespace
 
 void
-SGBGraph::RunAlgoT( )
+SGBGraph::runAlgoT( )
 {
-        assert( this->num_vertices_expected == this->vertices.size( ) );
-        taocp::RunAlgoT( &this->vertices, &this->component_ids );
+        assert( this->num_vertices_expected_ == this->vertices_.size( ) );
+        taocp::RunAlgoT( &this->vertices_, &this->component_ids_ );
 };
 }  // namespace taocp

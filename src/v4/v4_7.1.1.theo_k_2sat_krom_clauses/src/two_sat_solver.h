@@ -27,8 +27,8 @@ namespace taocp {
 
 struct TwoSatSolver {
       private:
-        size_t   n;
-        SGBGraph g;
+        size_t   n_;
+        SGBGraph g_;
 
       public:
         /// Prepare a solver for 2SAT with num_vars of variables. Internally, 2
@@ -38,28 +38,28 @@ struct TwoSatSolver {
 
       public:
         /// Add a Krom clause (v_id || u_id). For complement for a variable v,
-        /// use GetComplementId(v) as input.
-        void AddKromClause( size_t v_id, size_t u_id );
+        /// use getComplementId(v) as input.
+        void addKromClause( size_t v_id, size_t u_id );
 
         /// Returns true if the 2SAT is satisfiable.
-        bool CheckSatisfiability( );
+        bool checkSatisfiability( );
 
         /// Return an ID as complement of var_id.
         ///
-        /// Invariant: GetComplementId(GetComplementId(v)) == v.
-        size_t GetComplementId( size_t var_id )
+        /// Invariant: getComplementId(getComplementId(v)) == v.
+        size_t getComplementId( size_t var_id )
         {
-                return var_id >= n ? var_id - n : var_id + n;
+                return var_id >= n_ ? var_id - n_ : var_id + n_;
         }
 
         /// Return an canonical ID of var_id so it is not complement and can be
         /// used as a canonical ID.
         ///
         /// Invariant:
-        ///   GetCanonicalId(v) = GetCanonicalId(GetComplementId(v))
-        size_t GetCanonicalId( size_t var_id )
+        ///   getCanonicalId(v) = getCanonicalId(getComplementId(v))
+        size_t getCanonicalId( size_t var_id )
         {
-                return var_id >= n ? var_id - n : var_id;
+                return var_id >= n_ ? var_id - n_ : var_id;
         }
 };
 

@@ -17,11 +17,11 @@ namespace taocp {
 
 class WatchSolver {
       private:
-        size_t m_num_literals;
-        size_t m_num_clauses;
-        size_t m_num_emitted_clauses;
+        size_t num_literals_;
+        size_t num_clauses_;
+        size_t num_emitted_clauses_;
 
-        std::vector<size_t> m_cells; /* Index by cell. */
+        std::vector<size_t> cells_; /* Index by cell. */
 
         /*
          * The start position for each clause in cells.  The clause is
@@ -31,7 +31,7 @@ class WatchSolver {
          *
          * Index by clause. 1-based.
          */
-        std::vector<size_t> m_start;
+        std::vector<size_t> start_;
 
         /*
          * The start pointer for the clause watching the literal. The watched
@@ -39,7 +39,7 @@ class WatchSolver {
          *
          * Index by literal. 1-based.
          */
-        std::vector<literal_t> m_watch;
+        std::vector<literal_t> watch_;
 
         /*
          * LINK(j) is the pointer to the next clause with the same watched
@@ -47,7 +47,7 @@ class WatchSolver {
          *
          * Index by clause. 1-based.
          */
-        std::vector<size_t> m_link;
+        std::vector<size_t> link_;
 
       public:
         /* === --- Constructors ----------------------------------------- === */
@@ -60,19 +60,19 @@ class WatchSolver {
                      size_t num_reserved_cells );
         WatchSolver( size_t num_literals, size_t num_clauses );
 
-        auto ReserveCells( size_t num_cells ) -> void;
+        auto reserveCells( size_t num_cells ) -> void;
 
       public:
         /* === --- Conform Base Class ----------------------------------- === */
-        void EmitClause( size_t size, const literal_t * );
-        void EmitClause( std::initializer_list<literal_t> );
-        auto SearchOneSolution( ) -> std::optional<std::vector<literal_t>>;
+        void emitClause( size_t size, const literal_t * );
+        void emitClause( std::initializer_list<literal_t> );
+        auto searchOneSolution( ) -> std::optional<std::vector<literal_t>>;
 
       public:
         /* === --- A set of debug tooling. ----------------------------- === */
 
         /* Print the internal states of the solver. Orthogonal to debug mode. */
-        auto dump_debug_info( ) -> void;
+        auto dumpDebugInfo( ) -> void;
 
       private:
         /// Validate all literals are in right value domain.

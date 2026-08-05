@@ -35,11 +35,11 @@ struct DLinkNode {
 
 struct DLinkTable {
       private:
-        size_t n_items;
-        size_t n_options;
+        size_t n_items_;
+        size_t n_options_;
 
-        std::vector<DLinkItem> item_list;
-        std::vector<DLinkNode> table;
+        std::vector<DLinkItem> item_list_;
+        std::vector<DLinkNode> table_;
 
       public:
         /// Creates a new dancing link table with all necessary memory
@@ -57,29 +57,29 @@ struct DLinkTable {
         /// To append options with associated nodes, a callback function is
         /// provided to fill all nodes in one state machine.
         ///
-        /// AppendOptions will call fn one option each time and stop once the
+        /// appendOptions will call fn one option each time and stop once the
         /// whole table is filled (n_options reached).  Spacers will be
         /// inserted automatically.  Callback fn must ensure n_option_nodes,
         /// provided in the constructor, are respected.
         ///
         /// For each invocation of callback fn, the option_node_size and
-        /// option_node_top_ids must be set so AppendOptions can fill the
+        /// option_node_top_ids must be set so appendOptions can fill the
         /// table.
         ///
-        void AppendOptions( void ( *fn )( void    *user_data,
+        void appendOptions( void ( *fn )( void    *user_data,
                                           size_t  *option_node_size,
                                           size_t **option_node_top_ids ),
                             void *user_data );
 
         /// Cover one item to narrow the search space.
-        void CoverItem( size_t item_id );
+        void coverItem( size_t item_id );
 
         /// Search all solutions.
         ///
         /// === --- visit_fn.
         ///
         /// The visit_fn is called for all solutions found. The user_data and
-        /// user_solution are passed from SearchSolutions to visit_fn.
+        /// user_solution are passed from searchSolutions to visit_fn.
         ///
         /// If the visit_fn returns true, then the searching process stops
         /// immediately.  Otherwise, continues.
@@ -111,15 +111,15 @@ struct DLinkTable {
         ///
         /// To support that, users can provide a smaller buffer and hint the
         /// maximum size to fill the user_solution. This function,
-        /// SearchSolutions, will copy at most max_solution_size to the buffer
+        /// searchSolutions, will copy at most max_solution_size to the buffer
         /// and stop even this could be partial user_solution.
         ///
         /// [Partial Solution.] To detect this partial case, the buffer could
         /// be allocate +1 size, set a SENT value, and increase the
-        /// max_solution_size +1 as well before passing to SearchSolutions.
+        /// max_solution_size +1 as well before passing to searchSolutions.
         /// Inside visit_fn, check whether that SENT has been modified.
         ///
-        void SearchSolutions( bool ( *visit_fn )( void   *user_data,
+        void searchSolutions( bool ( *visit_fn )( void   *user_data,
                                                   size_t  solution_size,
                                                   size_t *user_solution ),
                               void *user_data, size_t max_solution_size,

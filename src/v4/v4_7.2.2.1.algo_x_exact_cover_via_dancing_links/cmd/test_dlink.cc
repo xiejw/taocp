@@ -51,7 +51,7 @@ FORGE_TEST( matrix_cover )
               }
         };
 
-        tbl.AppendOptions(
+        tbl.appendOptions(
             []( auto *user_data, size_t *total, size_t **top_ids ) {
                     auto  *state  = (OptionState *)user_data;
                     size_t row_id = state->row_id;
@@ -64,7 +64,7 @@ FORGE_TEST( matrix_cover )
         size_t sols[6 + 1] = { };  // At most 6. +1 for SENT
         size_t sols_size   = 0;
 
-        tbl.SearchSolutions(
+        tbl.searchSolutions(
             []( void *user_data, size_t solution_size,
                 size_t *solution ) -> bool {
                     *( (size_t *)user_data ) = solution_size;

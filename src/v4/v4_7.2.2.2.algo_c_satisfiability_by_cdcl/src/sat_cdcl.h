@@ -17,9 +17,9 @@ namespace taocp {
 
 class CDCLSolver {
       private:
-        literal_t m_num_literals;
-        size_t    m_num_clauses;
-        size_t    m_num_emitted_clauses;
+        literal_t num_literals_;
+        size_t    num_clauses_;
+        size_t    num_emitted_clauses_;
 
         std::vector<literal_t> mems_;   // K: mem loc. V: literal
         std::vector<literal_t> trail_;  // K: trail idx. V: literal

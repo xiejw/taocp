@@ -12,8 +12,8 @@ FORGE_TEST( test_single_node )
 {
         SGBGraph g{ 1 };
 
-        g.RunAlgoT( );
-        auto ids = g.GetComponentIdsAfterAlgoT( );
+        g.runAlgoT( );
+        auto ids = g.getComponentIdsAfterAlgoT( );
 
         EXPECT_TRUE( ids->size( ) == 1, "id array size" );
         EXPECT_TRUE( ids->at( 0 ) == 0, "id" );
@@ -25,14 +25,14 @@ FORGE_TEST( test_two_isolated_nodes )
 {
         SGBGraph g{ 2 };
         {
-                auto *v = g.GetVertex( 0 );
-                auto *u = g.GetVertex( 1 );
+                auto *v = g.getVertex( 0 );
+                auto *u = g.getVertex( 1 );
 
                 v->arcs.push_back( u );
         }
 
-        g.RunAlgoT( );
-        auto ids = g.GetComponentIdsAfterAlgoT( );
+        g.runAlgoT( );
+        auto ids = g.getComponentIdsAfterAlgoT( );
 
         EXPECT_TRUE( ids->size( ) == 2, "id array size" );
         EXPECT_TRUE( ids->at( 0 ) == 0, "id" );
@@ -45,15 +45,15 @@ FORGE_TEST( test_two_connected_nodes )
 {
         SGBGraph g{ 2 };
         {
-                auto *v = g.GetVertex( 0 );
-                auto *u = g.GetVertex( 1 );
+                auto *v = g.getVertex( 0 );
+                auto *u = g.getVertex( 1 );
 
                 v->arcs.push_back( u );
                 u->arcs.push_back( v );
         }
 
-        g.RunAlgoT( );
-        auto ids = g.GetComponentIdsAfterAlgoT( );
+        g.runAlgoT( );
+        auto ids = g.getComponentIdsAfterAlgoT( );
 
         EXPECT_TRUE( ids->size( ) == 2, "id array size" );
         EXPECT_TRUE( ids->at( 0 ) == ids->at( 1 ), "id" );
@@ -64,10 +64,10 @@ FORGE_TEST( test_two_components )
 {
         SGBGraph g{ 4 };
         {
-                auto *v = g.GetVertex( 0 );
-                auto *u = g.GetVertex( 1 );
-                auto *w = g.GetVertex( 2 );
-                auto *x = g.GetVertex( 3 );
+                auto *v = g.getVertex( 0 );
+                auto *u = g.getVertex( 1 );
+                auto *w = g.getVertex( 2 );
+                auto *x = g.getVertex( 3 );
 
                 // v <-> u <-> w
                 v->arcs.push_back( u );
@@ -80,8 +80,8 @@ FORGE_TEST( test_two_components )
                 w->arcs.push_back( x );
         }
 
-        g.RunAlgoT( );
-        auto ids = g.GetComponentIdsAfterAlgoT( );
+        g.runAlgoT( );
+        auto ids = g.getComponentIdsAfterAlgoT( );
 
         EXPECT_TRUE( ids->size( ) == 4, "id array size" );
         EXPECT_TRUE( ids->at( 0 ) == ids->at( 1 ), "id" );

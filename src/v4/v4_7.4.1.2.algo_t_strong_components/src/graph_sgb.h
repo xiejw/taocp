@@ -34,23 +34,23 @@ struct SGBGraph {
         // === --- Internal Data Structures -------------------------------- ===
 
       private:
-        std::vector<SGBNode> vertices;
+        std::vector<SGBNode> vertices_;
 #ifndef NDEBUG
-        size_t num_vertices_expected;
+        size_t num_vertices_expected_;
 #endif
 
       private:
-        // See RunAlgoT.
-        std::vector<int> component_ids;
+        // See runAlgoT.
+        std::vector<int> component_ids_;
 
         // === --- User Inputs --------------------------------------------- ===
       public:
-        // Ensure the points are stable.  So vertices is allocated.
+        // Ensure the points are stable.  So vertices_ is allocated.
         SGBGraph( size_t num_vertices )
-            : vertices( num_vertices )
+            : vertices_( num_vertices )
 #ifndef NDEBUG
               ,
-              num_vertices_expected( num_vertices )
+              num_vertices_expected_( num_vertices )
 #endif
         {
         }
@@ -58,20 +58,20 @@ struct SGBGraph {
         // === --- Public APIs --------------------------------------------- ===
       public:
         /// Return the SGBNode at position i.
-        SGBNode *GetVertex( size_t i ) { return &this->vertices.at( i ); }
+        SGBNode *getVertex( size_t i ) { return &this->vertices_.at( i ); }
 
         /// Run Algorithm T (V4F12A Strong Components) and then
-        /// GetComponentIdsAfterAlgotT can be used.
-        void RunAlgoT( );
+        /// getComponentIdsAfterAlgoT can be used.
+        void runAlgoT( );
 
         /// Return the component ids corresponding to the vertices, one id for
         /// each vertex. The value domain for id is not defined. But it is
         /// guaranteed that
         ///
         ///     0<= id < vertices.size();
-        const std::vector<int> *GetComponentIdsAfterAlgoT( ) const
+        const std::vector<int> *getComponentIdsAfterAlgoT( ) const
         {
-                return &component_ids;
+                return &component_ids_;
         };
 };
 }  // namespace taocp

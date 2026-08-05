@@ -234,10 +234,10 @@ CoverItems( taocp::DLinkTable *t, const int *problem )
                         if ( num == 0 ) continue;
 
                         item_ids = GenerateItemIdsForOption( x, y, num );
-                        t->CoverItem( item_ids.pos );
-                        t->CoverItem( item_ids.row );
-                        t->CoverItem( item_ids.col );
-                        t->CoverItem( item_ids.box );
+                        t->coverItem( item_ids.pos );
+                        t->coverItem( item_ids.row );
+                        t->coverItem( item_ids.col );
+                        t->coverItem( item_ids.box );
                 }
         }
 }
@@ -277,7 +277,7 @@ InsertOptions( taocp::DLinkTable *tbl, size_t opt_count, struct opt *opts )
                 state->opt_id++;
         };
 
-        tbl->AppendOptions( append_fn, &state );
+        tbl->appendOptions( append_fn, &state );
 }
 
 void
@@ -344,7 +344,7 @@ main( void )
         size_t sol[9 * 9];
         size_t num_sol  = 0;
         auto   visit_fn = []( void *user_data, size_t solution_size,
-                              size_t *user_solution ) {
+                            size_t *user_solution ) {
                 (void)user_solution;  // Unused
 
                 *( (size_t *)user_data ) = solution_size;
@@ -352,7 +352,7 @@ main( void )
                 return true;  // Stop immediately.
         };
 
-        tbl.SearchSolutions( visit_fn, &num_sol, 9 * 9, sol );
+        tbl.searchSolutions( visit_fn, &num_sol, 9 * 9, sol );
 
         if ( num_sol > 0 ) {
                 assert( num_sol <= 9 * 9 );

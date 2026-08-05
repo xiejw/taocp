@@ -257,10 +257,10 @@ DebugCheckVertexInvariant( std::vector<SGBNode> *vertices )
 }  // namespace
 
 void
-SGBGraph::RunAlgoT( )
+SGBGraph::runAlgoT( )
 {
-        assert( this->num_vertices_expected == this->vertices.size( ) );
-        DebugCheckVertexInvariant( &this->vertices );
-        taocp::RunAlgoT( &this->vertices, &this->component_ids );
+        assert( this->num_vertices_expected_ == this->vertices_.size( ) );
+        DebugCheckVertexInvariant( &this->vertices_ );
+        taocp::RunAlgoT( &this->vertices_, &this->component_ids_ );
 };
 }  // namespace taocp

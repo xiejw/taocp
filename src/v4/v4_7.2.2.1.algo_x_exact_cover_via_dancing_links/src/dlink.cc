@@ -258,21 +258,21 @@ X8:  // Leave level l
 
 DLinkTable::DLinkTable( size_t n_items, size_t n_options,
                         size_t n_option_nodes )
-    : n_items( n_items ),
-      n_options( n_options ),
-      item_list( 1 + n_items ),  // horizontal list
-      table( 1 + n_items +
-             // spacer nodes
-             1 + n_options +
-             // option nodes
-             n_option_nodes )  // vertical headers
+    : n_items_( n_items ),
+      n_options_( n_options ),
+      item_list_( 1 + n_items ),  // horizontal list
+      table_( 1 + n_items +
+              // spacer nodes
+              1 + n_options +
+              // option nodes
+              n_option_nodes )  // vertical headers
 {
         assert( n_items >= 1 );
         assert( n_options >= 1 );
         assert( n_option_nodes >= 1 );
 
         // Link the horizontal item list.
-        auto *item_list = this->item_list.data( );
+        auto *item_list = this->item_list_.data( );
         // item_list[0].id       = 0;
         item_list[0].l = n_items;  // Same as this->item_list_size - 1;
         item_list[0].r = 1;
@@ -287,7 +287,7 @@ DLinkTable::DLinkTable( size_t n_items, size_t n_options,
 
         // Link the vertical headers.
         for ( size_t i = 1; i <= n_items; i++ ) {
-                auto *n = &this->table[i];
+                auto *n = &this->table_[i];
                 n->len  = 0;
                 n->u    = i;
                 n->d    = i;
@@ -295,27 +295,27 @@ DLinkTable::DLinkTable( size_t n_items, size_t n_options,
 }
 
 void
-DLinkTable::AppendOptions( void ( *fn )( void    *user_data,
+DLinkTable::appendOptions( void ( *fn )( void    *user_data,
                                          size_t  *option_node_size,
                                          size_t **option_node_top_ids ),
                            void *user_data )
 {
-        DLinkNode *table = this->table.data( );
+        DLinkNode *table = this->table_.data( );
 
         size_t  option_node_size;
         size_t *option_node_top_ids;
 
         // Spacers start with position at 1 + num_items;
         size_t     spacer_count = 0;
-        size_t     spacer_id    = 1 + n_items;
+        size_t     spacer_id    = 1 + n_items_;
         DLinkNode *last_spacer  = &table[spacer_id];
         last_spacer->top        = -1 * ssize_t( spacer_count );
 
         size_t current_id = spacer_id + 1;
 
         while ( true ) {
-                if ( current_id >= this->table.size( ) ) {
-                        assert( current_id == this->table.size( ) );
+                if ( current_id >= this->table_.size( ) ) {
+                        assert( current_id == this->table_.size( ) );
                         break;  // End of filling options;
                 }
 
@@ -325,7 +325,7 @@ DLinkTable::AppendOptions( void ( *fn )( void    *user_data,
                 // Validate size
                 assert( option_node_size >= 1 );
                 assert( current_id + option_node_size + /*spacer*/ 1 <=
-                            this->table.size( ) &&
+                            this->table_.size( ) &&
                         "overflow table size" );
 
                 // Fill option nodes
@@ -349,26 +349,26 @@ DLinkTable::AppendOptions( void ( *fn )( void    *user_data,
 }
 
 void
-DLinkTable::SearchSolutions( bool ( *visit_fn )( void   *user_data,
+DLinkTable::searchSolutions( bool ( *visit_fn )( void   *user_data,
                                                  size_t  solution_size,
                                                  size_t *solution ),
                              void *user_data, size_t max_solution_size,
                              size_t *solution )
 {
-        std::vector<size_t> X( this->n_items );  // At most n_items.
+        std::vector<size_t> X( this->n_items_ );  // At most n_items.
 
-        ::taocp::SearchSolutions( this->n_items, this->n_options,
-                                  this->item_list.data( ), this->table.data( ),
-                                  X.data( ), visit_fn, user_data,
-                                  max_solution_size, solution );
+        ::taocp::SearchSolutions( this->n_items_, this->n_options_,
+                                  this->item_list_.data( ),
+                                  this->table_.data( ), X.data( ), visit_fn,
+                                  user_data, max_solution_size, solution );
 }
 
 void
-DLinkTable::CoverItem( size_t item_id )
+DLinkTable::coverItem( size_t item_id )
 {
-        assert( item_id > 0 && item_id <= this->n_items );
-        ::taocp::CoverItem( this->item_list.data( ), item_id,
-                            this->table.data( ) );
+        assert( item_id > 0 && item_id <= this->n_items_ );
+        ::taocp::CoverItem( this->item_list_.data( ), item_id,
+                            this->table_.data( ) );
 }
 
 }  // namespace taocp

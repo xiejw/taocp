@@ -11,31 +11,32 @@ namespace taocp {
 
 // Reserve 2n in the graph. n for the variables, n for the complements of
 // variables.
-TwoSatSolver::TwoSatSolver( size_t num_vars ) : n( num_vars ), g{ 2 * num_vars }
+TwoSatSolver::TwoSatSolver( size_t num_vars )
+    : n_( num_vars ), g_{ 2 * num_vars }
 {
 }
 
 void
-TwoSatSolver::AddKromClause( size_t v_id, size_t u_id )
+TwoSatSolver::addKromClause( size_t v_id, size_t u_id )
 {
-        assert( v_id >= 0 && v_id < 2 * this->n );
-        assert( u_id >= 0 && u_id < 2 * this->n );
+        assert( v_id >= 0 && v_id < 2 * this->n_ );
+        assert( u_id >= 0 && u_id < 2 * this->n_ );
 
-        auto *comp_v = this->g.GetVertex( this->GetComplementId( v_id ) );
-        comp_v->arcs.push_back( this->g.GetVertex( u_id ) );
+        auto *comp_v = this->g_.getVertex( this->getComplementId( v_id ) );
+        comp_v->arcs.push_back( this->g_.getVertex( u_id ) );
 
-        auto *comp_u = this->g.GetVertex( this->GetComplementId( u_id ) );
-        comp_u->arcs.push_back( this->g.GetVertex( v_id ) );
+        auto *comp_u = this->g_.getVertex( this->getComplementId( u_id ) );
+        comp_u->arcs.push_back( this->g_.getVertex( v_id ) );
 }
 
 bool
-TwoSatSolver::CheckSatisfiability( )
+TwoSatSolver::checkSatisfiability( )
 {
-        this->g.RunAlgoT( );
-        auto ids = g.GetComponentIdsAfterAlgoT( );
+        this->g_.runAlgoT( );
+        auto ids = g_.getComponentIdsAfterAlgoT( );
 
         if ( DEBUG ) {
-                DEBUG_PRINTF( "\nN= %d\n", int( this->n ) );
+                DEBUG_PRINTF( "\nN= %d\n", int( this->n_ ) );
                 for ( size_t i = 0; i < ids->size( ); i++ ) {
                         DEBUG_PRINTF( "%d => comp %d", int( i ),
                                       int( ids->at( i ) ) );
@@ -46,7 +47,7 @@ TwoSatSolver::CheckSatisfiability( )
         // its complement exist in one component for all variables, we could
         // simply check the first variable only. If its complement is in the
         // same component, the 2SAT is not satisfiable.
-        const size_t        SENT = 2 * this->n;
+        const size_t        SENT = 2 * this->n_;
         std::vector<size_t> leader_for_components( ids->size( ), SENT );
 
         for ( size_t vertex_id = 0; vertex_id < SENT; vertex_id++ ) {
@@ -65,8 +66,8 @@ TwoSatSolver::CheckSatisfiability( )
                         continue;
                 }
 
-                if ( this->GetCanonicalId( current_leader ) ==
-                     this->GetCanonicalId( vertex_id ) ) {
+                if ( this->getCanonicalId( current_leader ) ==
+                     this->getCanonicalId( vertex_id ) ) {
                         return false;
                 }
         }

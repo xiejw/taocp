@@ -12,8 +12,8 @@ FORGE_TEST( test_single_node_sat )
         // a || C(a)          C(a) -> C(a)
         TwoSatSolver s{ 1 };
         const size_t a = 0;
-        s.AddKromClause( a, s.GetComplementId( a ) );
-        bool sat = s.CheckSatisfiability( );
+        s.addKromClause( a, s.getComplementId( a ) );
+        bool sat = s.checkSatisfiability( );
 
         EXPECT_TRUE( sat, "true" );
 
@@ -26,9 +26,9 @@ FORGE_TEST( test_single_node_contradict )
         // C(a) || C(a)         a -> C(a)
         TwoSatSolver s{ 1 };
         const size_t a = 0;
-        s.AddKromClause( a, a );
-        s.AddKromClause( s.GetComplementId( a ), s.GetComplementId( a ) );
-        bool sat = s.CheckSatisfiability( );
+        s.addKromClause( a, a );
+        s.addKromClause( s.getComplementId( a ), s.getComplementId( a ) );
+        bool sat = s.checkSatisfiability( );
 
         EXPECT_TRUE( !sat, "not sat" );
 
@@ -42,9 +42,9 @@ FORGE_TEST( test_two_nodes )
         TwoSatSolver s{ 2 };
         const size_t a = 0;
         const size_t b = 1;
-        s.AddKromClause( s.GetComplementId( a ), s.GetComplementId( b ) );
-        s.AddKromClause( b, s.GetComplementId( a ) );
-        bool sat = s.CheckSatisfiability( );
+        s.addKromClause( s.getComplementId( a ), s.getComplementId( b ) );
+        s.addKromClause( b, s.getComplementId( a ) );
+        bool sat = s.checkSatisfiability( );
 
         EXPECT_TRUE( sat, "true" );
 
@@ -63,24 +63,24 @@ FORGE_TEST( test_comedians )
         const size_t y = 5;
         const size_t z = 6;
 
-        s.AddKromClause( s.GetComplementId( t ), s.GetComplementId( w ) );
-        s.AddKromClause( s.GetComplementId( u ), s.GetComplementId( z ) );
-        s.AddKromClause( u, s.GetComplementId( y ) );
-        s.AddKromClause( u, z );
-        s.AddKromClause( s.GetComplementId( y ), z );
-        s.AddKromClause( t, s.GetComplementId( x ) );
-        s.AddKromClause( t, z );
-        s.AddKromClause( s.GetComplementId( x ), z );
-        s.AddKromClause( s.GetComplementId( t ), s.GetComplementId( z ) );
-        s.AddKromClause( s.GetComplementId( v ), y );
-        s.AddKromClause( v, s.GetComplementId( w ) );
-        s.AddKromClause( v, s.GetComplementId( y ) );
-        s.AddKromClause( s.GetComplementId( w ), s.GetComplementId( y ) );
-        s.AddKromClause( u, x );
-        s.AddKromClause( s.GetComplementId( u ), v );
-        s.AddKromClause( s.GetComplementId( v ), s.GetComplementId( x ) );
+        s.addKromClause( s.getComplementId( t ), s.getComplementId( w ) );
+        s.addKromClause( s.getComplementId( u ), s.getComplementId( z ) );
+        s.addKromClause( u, s.getComplementId( y ) );
+        s.addKromClause( u, z );
+        s.addKromClause( s.getComplementId( y ), z );
+        s.addKromClause( t, s.getComplementId( x ) );
+        s.addKromClause( t, z );
+        s.addKromClause( s.getComplementId( x ), z );
+        s.addKromClause( s.getComplementId( t ), s.getComplementId( z ) );
+        s.addKromClause( s.getComplementId( v ), y );
+        s.addKromClause( v, s.getComplementId( w ) );
+        s.addKromClause( v, s.getComplementId( y ) );
+        s.addKromClause( s.getComplementId( w ), s.getComplementId( y ) );
+        s.addKromClause( u, x );
+        s.addKromClause( s.getComplementId( u ), v );
+        s.addKromClause( s.getComplementId( v ), s.getComplementId( x ) );
 
-        bool sat = s.CheckSatisfiability( );
+        bool sat = s.checkSatisfiability( );
 
         EXPECT_TRUE( !sat, "not sat" );
 

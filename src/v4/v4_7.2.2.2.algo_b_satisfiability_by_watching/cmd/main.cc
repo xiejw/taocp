@@ -15,7 +15,7 @@ auto
 PrintAndEmitClause( WatchSolver *sov, std::initializer_list<literal_t> lits )
 {
         PrintClause( lits.size( ), std::data( lits ) );
-        sov->EmitClause( lits );
+        sov->emitClause( lits );
 }
 
 auto
@@ -32,9 +32,9 @@ RunSolver( ) -> void
         PrintAndEmitClause( &sov, { 2, 3 } );
 
         // INFO( "Debug Print:" );
-        // sov.dump_debug_info( );
+        // sov.dumpDebugInfo( );
 
-        if ( auto res = sov.SearchOneSolution( ); res ) {
+        if ( auto res = sov.searchOneSolution( ); res ) {
                 INFO( "Satisfiable!!!" );
                 INFO( "Result:" );
                 PrintClause( res.value( ).size( ), res.value( ).data( ) );

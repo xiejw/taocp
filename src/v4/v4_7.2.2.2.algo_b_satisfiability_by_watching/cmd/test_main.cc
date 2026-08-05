@@ -38,63 +38,63 @@ FORGE_TEST( dpe_resolution )
         // clang-format off
         /* === --- Consistency ------------------------------------------ ===
          */
-        sov.EmitClause(  { C( 1 ) , C( 2 )  } );
-        sov.EmitClause(  { C( 1 ) , C( 3 )  } );
-        sov.EmitClause(  { C( 2 ) , C( 3 )  } );
+        sov.emitClause(  { C( 1 ) , C( 2 )  } );
+        sov.emitClause(  { C( 1 ) , C( 3 )  } );
+        sov.emitClause(  { C( 2 ) , C( 3 )  } );
 
-        sov.EmitClause(  { C( 4 ) , C( 5 )  } );
-        sov.EmitClause(  { C( 4 ) , C( 6 )  } );
-        sov.EmitClause(  { C( 5 ) , C( 6 )  } );
+        sov.emitClause(  { C( 4 ) , C( 5 )  } );
+        sov.emitClause(  { C( 4 ) , C( 6 )  } );
+        sov.emitClause(  { C( 5 ) , C( 6 )  } );
 
-        sov.EmitClause(  { C( 7 ) , C( 8 )  } );
-        sov.EmitClause(  { C( 7 ) , C( 9 )  } );
-        sov.EmitClause(  { C( 7 ) , C( 10 )  } );
-        sov.EmitClause(  { C( 7 ) , C( 11 )  } );
-        sov.EmitClause(  { C( 8 ) , C( 9 )  } );
-        sov.EmitClause(  { C( 8 ) , C( 10 )  } );
-        sov.EmitClause(  { C( 8 ) , C( 11 )  } );
-        sov.EmitClause(  { C( 9 ) , C( 10 )  } );
-        sov.EmitClause(  { C( 9 ) , C( 11 )  } );
-        sov.EmitClause(  { C( 10 ) , C( 11 )  } );
+        sov.emitClause(  { C( 7 ) , C( 8 )  } );
+        sov.emitClause(  { C( 7 ) , C( 9 )  } );
+        sov.emitClause(  { C( 7 ) , C( 10 )  } );
+        sov.emitClause(  { C( 7 ) , C( 11 )  } );
+        sov.emitClause(  { C( 8 ) , C( 9 )  } );
+        sov.emitClause(  { C( 8 ) , C( 10 )  } );
+        sov.emitClause(  { C( 8 ) , C( 11 )  } );
+        sov.emitClause(  { C( 9 ) , C( 10 )  } );
+        sov.emitClause(  { C( 9 ) , C( 11 )  } );
+        sov.emitClause(  { C( 10 ) , C( 11 )  } );
 
-        sov.EmitClause(  { C( 12 ) , C( 13 )  } );
-        sov.EmitClause(  { C( 12 ) , C( 14 )  } );
-        sov.EmitClause(  { C( 12 ) , C( 15 )  } );
-        sov.EmitClause(  { C( 12 ) , C( 16 )  } );
-        sov.EmitClause(  { C( 13 ) , C( 14 )  } );
-        sov.EmitClause(  { C( 13 ) , C( 15 )  } );
-        sov.EmitClause(  { C( 13 ) , C( 16 )  } );
-        sov.EmitClause(  { C( 14 ) , C( 15 )  } );
-        sov.EmitClause(  { C( 14 ) , C( 16 )  } );
-        sov.EmitClause(  { C( 15 ) , C( 16 )  } );
+        sov.emitClause(  { C( 12 ) , C( 13 )  } );
+        sov.emitClause(  { C( 12 ) , C( 14 )  } );
+        sov.emitClause(  { C( 12 ) , C( 15 )  } );
+        sov.emitClause(  { C( 12 ) , C( 16 )  } );
+        sov.emitClause(  { C( 13 ) , C( 14 )  } );
+        sov.emitClause(  { C( 13 ) , C( 15 )  } );
+        sov.emitClause(  { C( 13 ) , C( 16 )  } );
+        sov.emitClause(  { C( 14 ) , C( 15 )  } );
+        sov.emitClause(  { C( 14 ) , C( 16 )  } );
+        sov.emitClause(  { C( 15 ) , C( 16 )  } );
 
         /* === --- Dependencies ----------------------------------------- ===
         */
-        sov.EmitClause(  { C( 2 ), 5  } );
-        sov.EmitClause(  { C( 2 ), 13, 14, 15, 16  } );
+        sov.emitClause(  { C( 2 ), 5  } );
+        sov.emitClause(  { C( 2 ), 13, 14, 15, 16  } );
 
-        sov.EmitClause(  { C( 3 ), 5, 6  } );
-        sov.EmitClause(  { C( 3 ), 14, 15, 16  } );
+        sov.emitClause(  { C( 3 ), 5, 6  } );
+        sov.emitClause(  { C( 3 ), 14, 15, 16  } );
 
-        sov.EmitClause(  { C( 4 ), 14, 15, 16  } );
-        sov.EmitClause(  { C( 5 ), 14, 15, 16  } );
-        sov.EmitClause(  { C( 6 ), 15, 16  } );
+        sov.emitClause(  { C( 4 ), 14, 15, 16  } );
+        sov.emitClause(  { C( 5 ), 14, 15, 16  } );
+        sov.emitClause(  { C( 6 ), 15, 16  } );
 
-        sov.EmitClause(  { C( 7 ), 12, 13, 14, 15  } );
-        sov.EmitClause(  { C( 8 ), 12, 13, 14, 15  } );
-        sov.EmitClause(  { C( 9 ), 13, 14, 15, 16  } );
-        sov.EmitClause(  { C( 10 ), 14, 15, 16  } );
-        sov.EmitClause(  { C( 11 ), 15, 16  } );
+        sov.emitClause(  { C( 7 ), 12, 13, 14, 15  } );
+        sov.emitClause(  { C( 8 ), 12, 13, 14, 15  } );
+        sov.emitClause(  { C( 9 ), 13, 14, 15, 16  } );
+        sov.emitClause(  { C( 10 ), 14, 15, 16  } );
+        sov.emitClause(  { C( 11 ), 15, 16  } );
 
         /* === --- Root  ------------------------------------------------ ===
         */
-        sov.EmitClause(  { 3  } );
-        sov.EmitClause(  { 6  } );
-        sov.EmitClause(  { 10, 11  } );
-        sov.EmitClause(  { 16  } );
+        sov.emitClause(  { 3  } );
+        sov.emitClause(  { 6  } );
+        sov.emitClause(  { 10, 11  } );
+        sov.emitClause(  { 16  } );
 
         // clang-format on
-        auto res = sov.SearchOneSolution( );
+        auto res = sov.searchOneSolution( );
 
         EXPECT_TRUE( bool( res ) == true, "has answer" );
         EXPECT_TRUE( res.value( ).size( ) == 16, "16 eles" );
@@ -128,12 +128,12 @@ FORGE_TEST( simple )
          */
         WatchSolver sov{ /*num_literals=*/3, /*num_causes=*/4 };
 
-        sov.EmitClause( { ( 1 ) } );
-        sov.EmitClause( { 1, C( 2 ) } );
-        sov.EmitClause( { 2, C( 3 ) } );
-        sov.EmitClause( { 2, 3 } );
+        sov.emitClause( { ( 1 ) } );
+        sov.emitClause( { 1, C( 2 ) } );
+        sov.emitClause( { 2, C( 3 ) } );
+        sov.emitClause( { 2, 3 } );
 
-        auto res = sov.SearchOneSolution( );
+        auto res = sov.searchOneSolution( );
 
         EXPECT_TRUE( bool( res ) == true, "has answer" );
         EXPECT_TRUE( res.value( ).size( ) == 3, "3 eles" );
@@ -155,13 +155,13 @@ FORGE_TEST( reverse )
          */
         WatchSolver sov{ /*num_literals=*/3, /*num_causes=*/5 };
 
-        sov.EmitClause( { 3 } );
-        sov.EmitClause( { C( 2 ), 1 } );
-        sov.EmitClause( { 3, 2 } );
-        sov.EmitClause( { C( 3 ), C( 1 ) } );
-        sov.EmitClause( { 3, C( 1 ) } );
+        sov.emitClause( { 3 } );
+        sov.emitClause( { C( 2 ), 1 } );
+        sov.emitClause( { 3, 2 } );
+        sov.emitClause( { C( 3 ), C( 1 ) } );
+        sov.emitClause( { 3, C( 1 ) } );
 
-        auto res = sov.SearchOneSolution( );
+        auto res = sov.searchOneSolution( );
 
         EXPECT_TRUE( bool( res ) == true, "has answer" );
         EXPECT_TRUE( res.value( ).size( ) == 3, "3 eles" );
@@ -182,12 +182,12 @@ FORGE_TEST( no_result )
          */
         WatchSolver sov{ /*num_literals=*/3, /*num_causes=*/4 };
 
-        sov.EmitClause( { C( 1 ) } );
-        sov.EmitClause( { 1, C( 2 ) } );
-        sov.EmitClause( { 2, C( 3 ) } );
-        sov.EmitClause( { 2, 3 } );
+        sov.emitClause( { C( 1 ) } );
+        sov.emitClause( { 1, C( 2 ) } );
+        sov.emitClause( { 2, C( 3 ) } );
+        sov.emitClause( { 2, 3 } );
 
-        auto res = sov.SearchOneSolution( );
+        auto res = sov.searchOneSolution( );
 
         EXPECT_TRUE( bool( res ) == false, "no answer" );
 }
