@@ -21,7 +21,8 @@ class CDCLSolver {
         size_t    m_num_clauses;
         size_t    m_num_emitted_clauses;
 
-        std::vector<literal_t> m_mems;
+        std::vector<literal_t> mems_;   // K: mem loc. V: literal
+        std::vector<literal_t> trail_;  // K: trail idx. V: literal
 
       public:
         /* === --- Constructors ----------------------------------------- === */

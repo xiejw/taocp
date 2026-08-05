@@ -23,7 +23,7 @@ See `roadmap/TODO.md` for modules that are still scaffolding without a real impl
 make compile       # Compile all modules
 make test          # Run all tests
 make ASAN=1 test   # Run all tests with Address Sanitizer
-make release       # Build all modules with -O3 -march=native -flto -ffast-math
+make release       # Build all modules with -O2 -march=native -flto -ffast-math
 make fmt           # Format all C++ code
 make clean         # Remove all build artifacts
 ```
@@ -47,9 +47,9 @@ cd doc/notes && make run    # Build PDF documentation
 
 Each algorithm lives in its own directory named `src/v{volume}/v{volume}_{section}.algo_{letter}_{description}/`. Modules are self-contained and build independently.
 
-**Source layout within each module:**
+**Source layout within each module** follows the `cmd/` + `src/` convention in `doc/lang_cc.md`:
 - `cmd/main.cc` — algorithm implementation (the core TAOCP translation)
-- `cmd/*_test.cc` — additional test binaries (when present)
+- `cmd/test_<name>.cc` — additional test binaries (when present)
 - `src/*.cc`, `src/*.h` — shared utilities: logging (`log.h/cc`), graph structures (`graph_sgb.cc`), data structures
 
 **Build templates** (in `src/mk/`):
@@ -60,9 +60,12 @@ All binaries output to `.build/` within each module directory.
 
 ## Code Style Conventions
 
+General C++ naming, error handling, and project-layout conventions are defined
+in `doc/lang_cc.md` — read it before writing or editing C++ code. This
+repository additionally follows these TAOCP-specific conventions:
+
 - **Goto-based state machines**: Steps like `B1:`, `B2:` etc. directly mirror TAOCP pseudocode labels. This is intentional — do not refactor gotos away.
 - **1-based arrays**: Arrays are allocated with one extra slot and indexed from 1, matching TAOCP notation.
 - **MEMs metric**: Performance is measured in memory accesses (Knuth's MEMs). Instrumented via `mem_access_counter`.
 - **`forge:` comments**: Mark files for checksum checks..
-- **C++17** with `-Wall -Werror -pedantic -Wextra -Wfatal-errors -Wconversion -fno-rtti -fno-exceptions`.
 - Multi-language implementations exist for some modules (Go in `go/`, Rust in `rs/`).

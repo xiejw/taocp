@@ -3,7 +3,7 @@ MODS    += ${BUILD_OBJS}/dlink.o
 
 MAIN_OUT = main
 
-TEST_OUT = dlink_test
+TEST_OUT = test_dlink
 
 include mk.tpl
 

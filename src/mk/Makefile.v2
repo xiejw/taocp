@@ -27,7 +27,7 @@
 #
 # Or define a new binary for test
 #
-#     TEST_OUT = dlink_test
+#     TEST_OUT = test_dlink
 #     $(eval $(call CMD_template,${TEST_OUT}))
 #     $(eval $(call TEST_template,${TEST_OUT}))
 #
@@ -47,7 +47,7 @@ SRC_DEPS    += $(wildcard src/*.h)
 SRC_DEPS    += $(wildcard cmd/*.cc)
 
 ifdef RELEASE
-CXXFLAGS   += -DNDEBUG -O3 -march=native
+CXXFLAGS   += -DNDEBUG -O2 -march=native
 CXXFLAGS   += -flto -ffast-math
 
 ifeq ($(UNAME_S),Linux)

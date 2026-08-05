@@ -27,7 +27,7 @@ SRC_DEPS    += $(wildcard src/*.h)
 SRC_DEPS    += $(wildcard cmd/*.cc)
 
 ifdef RELEASE
-CXXFLAGS   += -DNDEBUG -O3 -march=native
+CXXFLAGS   += -DNDEBUG -O2 -march=native
 CXXFLAGS   += -flto -ffast-math
 
 ifeq ($(UNAME_S),Linux)
