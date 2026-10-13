@@ -1,0 +1,23 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The top-level `make test` also runs tools/forge_version_tag_checker.go.
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Install clang
+        run: sudo apt-get update && sudo apt-get install -y clang
+
+      - name: make test
+        run: make CXX=clang++ test
