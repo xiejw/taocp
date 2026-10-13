@@ -1,3 +1,11 @@
+# Quick Start
+
+```
+make
+```
+
+# Algorithms
+
 ## Boolean  Basics
 |Algorithm List|
 | :--- |

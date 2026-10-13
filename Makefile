@@ -11,6 +11,10 @@ MODS     += src/v4/v4_7.4.1.2.algo_t_strong_components
 
 # MODS     += v4_sat
 
+
+run:
+	@go run tools/menu.go
+
 compile:
 	@set -e; for m in $(MODS); do                             \
 		make --no-print-directory -C $$m compile;         \
@@ -31,6 +35,7 @@ fmt:
 	@set -e; for m in $(MODS); do                             \
 		make --no-print-directory -C $$m fmt;             \
 		done
+	make --no-print-directory -C tools fmt
 
 clean:
 	@set -e; for m in $(MODS); do                             \
