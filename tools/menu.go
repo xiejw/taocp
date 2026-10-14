@@ -142,7 +142,8 @@ func selectDir(dirs []string, cursor int) (idx int, ok bool) {
 	top := 0
 	escPending := false
 	for {
-		height := termHeight() - 6
+		rows, cols := termSize()
+		height := rows - 6
 		if height < 3 {
 			height = 3
 		}
@@ -155,7 +156,7 @@ func selectDir(dirs []string, cursor int) (idx int, ok bool) {
 		if cursor >= top+height {
 			top = cursor - height + 1
 		}
-		draw(dirs, cursor, top, height, escPending)
+		draw(dirs, cursor, top, height, cols, escPending)
 
 		k := readKey()
 		if k != keyEsc {
@@ -179,21 +180,23 @@ func selectDir(dirs []string, cursor int) (idx int, ok bool) {
 	}
 }
 
-func draw(dirs []string, cursor, top, height int, escPending bool) {
-	width := 0
-	for _, d := range dirs {
-		if len(d) > width {
-			width = len(d)
-		}
+// draw renders the selection box spanning the full terminal width cols.
+func draw(dirs []string, cursor, top, height, cols int, escPending bool) {
+	width := cols - 2 // inner width, excluding the two border chars
+	if width < 8 {
+		width = 8
 	}
-	width += 4
 
 	var b strings.Builder
 	b.WriteString("\x1b[H\x1b[2J")                                           // \x1b[H: cursor to top-left; \x1b[2J: clear screen
 	b.WriteString(fmt.Sprintf("Select a module to run `%s`:\r\n", *flagCmd)) // \r\n: raw mode needs an explicit carriage return
 	b.WriteString("┌" + strings.Repeat("─", width) + "┐\r\n")
 	for i := top; i < top+height; i++ {
-		line := fmt.Sprintf("  %-*s", width-2, dirs[i])
+		name := dirs[i]
+		if len(name) > width-2 {
+			name = name[:width-2] // truncate so the right border stays aligned
+		}
+		line := fmt.Sprintf("  %-*s", width-2, name)
 		if i == cursor {
 			line = "\x1b[7m> " + line[2:] + "\x1b[0m" // \x1b[7m: reverse video (highlight); \x1b[0m: reset attributes
 		}
@@ -265,14 +268,14 @@ func sttyGet() (string, error) { return stty("-g") }
 func sttySet(state string)     { stty(state) }
 func sttyRaw()                 { stty("raw", "-echo") }
 
-func termHeight() int {
+// termSize returns the terminal rows and cols, defaulting to 24x80.
+func termSize() (rows, cols int) {
 	out, err := stty("size")
 	if err != nil {
-		return 24
+		return 24, 80
 	}
-	var rows, cols int
-	if _, err := fmt.Sscanf(out, "%d %d", &rows, &cols); err != nil || rows == 0 {
-		return 24
+	if _, err := fmt.Sscanf(out, "%d %d", &rows, &cols); err != nil || rows == 0 || cols == 0 {
+		return 24, 80
 	}
-	return rows
+	return rows, cols
 }
