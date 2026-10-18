@@ -1,4 +1,5 @@
 // vim: ft=cpp
+// forge:v1
 #pragma once
 
 #define C( x ) x
