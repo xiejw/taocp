@@ -43,20 +43,20 @@ pub enum ID {
     Waerden339,
 }
 
-impl ID {
-    /// Returns a human-readable name for printing.
-    pub fn human_str(&self) -> &'static str {
-        match self {
-            ID::Rivest => "v4b;pg188;eq6;rivest",
-            ID::Waerden339 => "v4b;pg188;eq9;waerden(3,3;9)",
-        }
-    }
+/// Where a benchmark problem comes from in TAOCP.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct BenchInfo {
+    pub vol: &'static str,
+    pub page: &'static str,
+    pub eqn: &'static str,
+    pub name: &'static str,
+    pub num_vars: usize,
 }
 
 /// A benchmark problem.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Bench {
-    pub num_vars: usize,
+    pub info: BenchInfo,
     /// All literals of all clauses, laid out one clause after another.
     pub clauses: Vec<Literal>,
     /// Clause j is `clauses[begin..end]` where `(begin, end) = segments[j]`.
@@ -68,7 +68,13 @@ impl Bench {
     pub fn get(id: ID) -> Bench {
         match id {
             ID::Rivest => Bench::from_clauses(
-                4,
+                BenchInfo {
+                    vol: "4b",
+                    page: "188",
+                    eqn: "6",
+                    name: "rivest",
+                    num_vars: 4,
+                },
                 &[
                     &[1, 2, -3],
                     &[2, 3, -4],
@@ -80,14 +86,20 @@ impl Bench {
                     &[-4, 1, -2],
                 ],
             ),
-            ID::Waerden339 => Bench::waerden_3_3(9),
+            ID::Waerden339 => Bench::waerden_3_3(BenchInfo {
+                vol: "4b",
+                page: "188",
+                eqn: "9",
+                name: "waerden(3,3;9)",
+                num_vars: 9,
+            }),
         }
     }
 
     /// Builds a `Bench` from clauses written in DIMACS notation: each literal
     /// is a nonzero integer, `k` for x_k and `-k` for ¬x_k (see
     /// `Literal::from_dimacs`).
-    fn from_clauses(num_vars: usize, cs: &[&[isize]]) -> Bench {
+    fn from_clauses(info: BenchInfo, cs: &[&[isize]]) -> Bench {
         let mut clauses = Vec::new();
         let mut segments = Vec::with_capacity(cs.len());
         for c in cs {
@@ -96,7 +108,7 @@ impl Bench {
             segments.push((begin, clauses.len()));
         }
         Bench {
-            num_vars,
+            info,
             clauses,
             segments,
         }
@@ -105,7 +117,8 @@ impl Bench {
     /// waerden(3,3;n): for every arithmetic progression i, i+d, i+2d in
     /// 1..=n, the clauses (x_i x_{i+d} x_{i+2d}) and (¬x_i ¬x_{i+d} ¬x_{i+2d}).
     /// All positive clauses come first, then all negative ones.
-    fn waerden_3_3(n: isize) -> Bench {
+    fn waerden_3_3(info: BenchInfo) -> Bench {
+        let n = info.num_vars as isize;
         // Stage 1: generate all arithmetic progression (ap).
         //
         let mut aps = Vec::new();
@@ -129,7 +142,7 @@ impl Bench {
             }
         }
         Bench {
-            num_vars: n as usize,
+            info,
             clauses,
             segments,
         }
@@ -142,7 +155,7 @@ mod tests {
 
     /// Brute-force: true if some assignment satisfies every clause.
     ///
-    /// Tries all 2^n assignments, where n = `b.num_vars`. An assignment is a
+    /// Tries all 2^n assignments, where n = `b.info.num_vars`. An assignment is a
     /// u64 `bits` whose bit k-1 holds the value of x_k (1 = true), so counting
     /// `bits` from 0 to 2^n - 1 visits every assignment exactly once.
     ///
@@ -154,7 +167,7 @@ mod tests {
     /// Cost is O(2^n * total literals), which is fine for the small benchmarks
     /// here; it requires n <= 63 so `1 << n` fits in a u64.
     fn satisfiable_by_brute_force(b: &Bench) -> bool {
-        (0u64..1 << b.num_vars).any(|bits| {
+        (0u64..1 << b.info.num_vars).any(|bits| {
             b.segments.iter().all(|&(begin, end)| {
                 b.clauses[begin..end].iter().any(|&Literal(l)| {
                     let v = bits >> (l.unsigned_abs() - 1) & 1 == 1;
@@ -166,14 +179,8 @@ mod tests {
 
     #[test]
     fn get_returns_num_vars() {
-        assert_eq!(Bench::get(ID::Rivest).num_vars, 4);
-        assert_eq!(Bench::get(ID::Waerden339).num_vars, 9);
-    }
-
-    #[test]
-    fn human_str() {
-        assert_eq!(ID::Rivest.human_str(), "v4b;pg188;eq6;rivest");
-        assert_eq!(ID::Waerden339.human_str(), "v4b;pg188;eq9;waerden(3,3;9)");
+        assert_eq!(Bench::get(ID::Rivest).info.num_vars, 4);
+        assert_eq!(Bench::get(ID::Waerden339).info.num_vars, 9);
     }
 
     #[test]
