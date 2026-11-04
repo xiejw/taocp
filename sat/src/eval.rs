@@ -10,13 +10,13 @@ pub struct Literal(pub isize);
 impl Literal {
     /// Returns the positive literal x_v. `v` must be positive.
     pub fn new_pos(v: isize) -> Literal {
-        debug_assert!(v > 0, "var id must be positive, got {v}");
+        assert!(v > 0, "var id must be positive, got {v}");
         Literal(v)
     }
 
     /// Returns the negative literal ¬x_v. `v` must be positive.
     pub fn new_neg(v: isize) -> Literal {
-        debug_assert!(v > 0, "var id must be positive, got {v}");
+        assert!(v > 0, "var id must be positive, got {v}");
         Literal(-v)
     }
 
@@ -25,6 +25,8 @@ impl Literal {
     pub fn from_dimacs(l: isize) -> Literal {
         if l > 0 {
             Literal::new_pos(l)
+        } else if l == 0 {
+            panic!("DIMACS literal must be nonzero");
         } else {
             Literal::new_neg(-l)
         }
@@ -45,8 +47,8 @@ impl ID {
     /// Returns a human-readable name for printing.
     pub fn human_str(&self) -> &'static str {
         match self {
-            ID::Rivest => "v4b;pg188;rivest",
-            ID::Waerden339 => "v4b;pg188;waerden(3,3;9)",
+            ID::Rivest => "v4b;pg188;eq6;rivest",
+            ID::Waerden339 => "v4b;pg188;eq9;waerden(3,3;9)",
         }
     }
 }
@@ -104,12 +106,19 @@ impl Bench {
     /// 1..=n, the clauses (x_i x_{i+d} x_{i+2d}) and (¬x_i ¬x_{i+d} ¬x_{i+2d}).
     /// All positive clauses come first, then all negative ones.
     fn waerden_3_3(n: isize) -> Bench {
+        // Stage 1: generate all arithmetic progression (ap).
+        //
         let mut aps = Vec::new();
         for d in 1..=(n - 1) / 2 {
             for i in 1..=n - 2 * d {
                 aps.push([i, i + d, i + 2 * d]);
             }
         }
+
+        // Stage 2: fill into clauses and segments
+        // - 2 is due to poss and negs.
+        // - 3 is due to the number of literals in each ap
+        //
         let mut clauses = Vec::with_capacity(2 * 3 * aps.len());
         let mut segments = Vec::with_capacity(2 * aps.len());
         for new_lit in [Literal::new_pos, Literal::new_neg] {
@@ -132,7 +141,19 @@ mod tests {
     use super::*;
 
     /// Brute-force: true if some assignment satisfies every clause.
-    fn satisfiable(b: &Bench) -> bool {
+    ///
+    /// Tries all 2^n assignments, where n = `b.num_vars`. An assignment is a
+    /// u64 `bits` whose bit k-1 holds the value of x_k (1 = true), so counting
+    /// `bits` from 0 to 2^n - 1 visits every assignment exactly once.
+    ///
+    /// For each assignment, every clause (one `(begin, end)` segment) must be
+    /// true; a clause is true if any of its literals is true. Literal x_k is
+    /// true when bit k-1 is 1, and ¬x_k when that bit is 0. `any`/`all` stop
+    /// early, so the search ends at the first satisfying assignment.
+    ///
+    /// Cost is O(2^n * total literals), which is fine for the small benchmarks
+    /// here; it requires n <= 63 so `1 << n` fits in a u64.
+    fn satisfiable_by_brute_force(b: &Bench) -> bool {
         (0u64..1 << b.num_vars).any(|bits| {
             b.segments.iter().all(|&(begin, end)| {
                 b.clauses[begin..end].iter().any(|&Literal(l)| {
@@ -151,8 +172,8 @@ mod tests {
 
     #[test]
     fn human_str() {
-        assert_eq!(ID::Rivest.human_str(), "v4b;pg188;rivest");
-        assert_eq!(ID::Waerden339.human_str(), "v4b;pg188;waerden(3,3;9)");
+        assert_eq!(ID::Rivest.human_str(), "v4b;pg188;eq6;rivest");
+        assert_eq!(ID::Waerden339.human_str(), "v4b;pg188;eq9;waerden(3,3;9)");
     }
 
     #[test]
@@ -168,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "var id must be positive")]
+    #[should_panic(expected = "DIMACS literal must be nonzero")]
     fn literal_from_dimacs_rejects_zero() {
         Literal::from_dimacs(0);
     }
@@ -211,14 +232,14 @@ mod tests {
 
     #[test]
     fn all_unsatisfiable() {
-        assert!(!satisfiable(&Bench::get(ID::Rivest)));
-        assert!(!satisfiable(&Bench::get(ID::Waerden339)));
+        assert!(!satisfiable_by_brute_force(&Bench::get(ID::Rivest)));
+        assert!(!satisfiable_by_brute_force(&Bench::get(ID::Waerden339)));
     }
 
     #[test]
     fn rivest_minus_last_clause_is_satisfiable() {
         let mut r = Bench::get(ID::Rivest);
         r.segments.pop();
-        assert!(satisfiable(&r));
+        assert!(satisfiable_by_brute_force(&r));
     }
 }
