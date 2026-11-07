@@ -5,11 +5,13 @@ MODS     += src/v4/v4_7.2.2.algo_b_basic_backtrack_bit_vec
 MODS     += src/v4/v4_7.2.2.algo_w_walker_backtrack
 MODS     += src/v4/v4_7.2.2.1.algo_x_exact_cover_via_dancing_links
 MODS     += src/v4/v4_7.2.2.2.algo_b_satisfiability_by_watching
-#MODS     += roadmap/v4_7.2.2.2.algo_c_satisfiability_by_cdcl
-#MODS     += roadmap/v4_7.2.2.4.algo_h_all_hamiltonian_cycles
 MODS     += src/v4/v4_7.4.1.2.algo_t_strong_components
 
-# MODS     += v4_sat
+MODS     += src/sat
+
+# // Pending
+#MODS     += roadmap/v4_7.2.2.2.algo_c_satisfiability_by_cdcl
+#MODS     += roadmap/v4_7.2.2.4.algo_h_all_hamiltonian_cycles
 
 
 run:
