@@ -68,4 +68,3 @@ repository additionally follows these TAOCP-specific conventions:
 - **1-based arrays**: Arrays are allocated with one extra slot and indexed from 1, matching TAOCP notation.
 - **MEMs metric**: Performance is measured in memory accesses (Knuth's MEMs). Instrumented via `mem_access_counter`.
 - **`forge:` comments**: Mark files for checksum checks..
-- Multi-language implementations exist for some modules (Go in `go/`, Rust in `rs/`).
