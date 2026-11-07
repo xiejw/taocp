@@ -41,7 +41,7 @@ uint64_t counter = 0;
 void
 VisitSolution( )
 {
-        counter++;
+    counter++;
 }
 
 // === --- Algorithm B - Basic Backtrack - Vol 4B Page 33 ------------------
@@ -53,75 +53,74 @@ VisitSolution( )
 // clear-then-set logic, like x = (x & ~(1u << t)) | ((v & 1u) << t);
 //
 #define REG_R( x, t ) ( ( ( x ) >> ( t ) ) & 1 )
-#define REG_W( x, t, v )                                  \
-        ( x = ( ( ( x ) & ~( uint64_t( 1 ) << ( t ) ) ) | \
-                ( ( ( v ) & 1u ) << ( t ) ) ) )
+#define REG_W( x, t, v )                              \
+    ( x = ( ( ( x ) & ~( uint64_t( 1 ) << ( t ) ) ) | \
+            ( ( ( v ) & 1u ) << ( t ) ) ) )
 
 void
 Search( )
 {
-        // Use variable to hold A, B, C and hope compiler can put them into
-        // registers.
-        uint64_t A = 0;
-        uint64_t B = 0;
-        uint64_t C = 0;
+    // Use variable to hold A, B, C and hope compiler can put them into
+    // registers.
+    uint64_t A = 0;
+    uint64_t B = 0;
+    uint64_t C = 0;
 
-        int t;
-        int l;
+    int t;
+    int l;
 
-        goto B1;
+    goto B1;
 
 B1:  // Initialize
-        l = 1;
+    l = 1;
 
-        // Fallthrough
+    // Fallthrough
 
 B2:  // Enter level l
-        if ( l > kNum ) {
-                VisitSolution( );
-                goto B5;
-        }
+    if ( l > kNum ) {
+        VisitSolution( );
+        goto B5;
+    }
 
-        // Scan domain now.
-        t = 1;
+    // Scan domain now.
+    t = 1;
 
-        // Fallthrough
+    // Fallthrough
 
 B3:  // Try t
-        if ( REG_R( A, t ) || REG_R( B, t + l - 1 ) ||
-             REG_R( C, t - l + kNum ) ) {
-                goto B4;
-        }
+    if ( REG_R( A, t ) || REG_R( B, t + l - 1 ) || REG_R( C, t - l + kNum ) ) {
+        goto B4;
+    }
 
-        REG_W( A, t, 1 );
-        REG_W( B, t + l - 1, 1 );
-        REG_W( C, t - l + kNum, 1 );
-        MEM_W( X, l, t );
-        l++;
-        goto B2;
+    REG_W( A, t, 1 );
+    REG_W( B, t + l - 1, 1 );
+    REG_W( C, t - l + kNum, 1 );
+    MEM_W( X, l, t );
+    l++;
+    goto B2;
 
 B4:  // Try next t
-        if ( t < kNum ) {
-                t++;
-                goto B3;
-        }
+    if ( t < kNum ) {
+        t++;
+        goto B3;
+    }
 
-        // Fallthrough
+    // Fallthrough
 
 B5:  // Backtrack
-        l--;
-        if ( l > 0 ) {
-                t = MEM_R( X, l );
-                REG_W( C, t - l + kNum, 0 );
-                REG_W( B, t + l - 1, 0 );
-                REG_W( A, t, 0 );
-                goto B4;
-        }
+    l--;
+    if ( l > 0 ) {
+        t = MEM_R( X, l );
+        REG_W( C, t - l + kNum, 0 );
+        REG_W( B, t + l - 1, 0 );
+        REG_W( A, t, 0 );
+        goto B4;
+    }
 
-        // Fallthrough
+    // Fallthrough
 
-        // Exit
-        return;
+    // Exit
+    return;
 }
 
 }  // namespace
@@ -129,10 +128,9 @@ B5:  // Backtrack
 int
 main( )
 {
-        INFO(
-            "Basic Backtrack + Bit Vectors (Vol 4B, Page 32) - N Queue: N = %d",
-            kNum );
-        Search( );
-        INFO( "Done: %" PRIu64, counter );
-        INFO( "Memory Access: %" PRIu64, mem_access_counter );
+    INFO( "Basic Backtrack + Bit Vectors (Vol 4B, Page 32) - N Queue: N = %d",
+          kNum );
+    Search( );
+    INFO( "Done: %" PRIu64, counter );
+    INFO( "Memory Access: %" PRIu64, mem_access_counter );
 }

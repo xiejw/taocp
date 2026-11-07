@@ -77,13 +77,13 @@ struct horn;
 
 // A wrapper to make conclusion strong type.
 struct horn_conclusion {
-        int id;  // -1 if no conclusion.
+    int id;  // -1 if no conclusion.
 };
 
 inline struct horn_conclusion
 horn_no_conclusion( )
 {
-        return horn_conclusion{ -1 };
+    return horn_conclusion{ -1 };
 }
 
 struct horn *horn_new( int num_variables );
@@ -129,14 +129,13 @@ bool horn_is_var_in_core( struct horn *h, int id_of_var );
 ///////// TODO
 
 // Helper macros
-#define HORN_ADD_CLAUSE_HELPER( h, conclusion, num_hy, ... )        \
-        do {                                                        \
-                int hypotheses[] = { __VA_ARGS__ };                 \
-                horn_add_clause( ( h ), ( conclusion ), ( num_hy ), \
-                                 hypotheses );                      \
-        } while ( 0 )
+#define HORN_ADD_CLAUSE_HELPER( h, conclusion, num_hy, ... )              \
+    do {                                                                  \
+        int hypotheses[] = { __VA_ARGS__ };                               \
+        horn_add_clause( ( h ), ( conclusion ), ( num_hy ), hypotheses ); \
+    } while ( 0 )
 
 #define HORN_ADD_CLAUSE_WO_HYPOTHESES( h, conclusion ) \
-        horn_add_clause( ( h ), ( conclusion ), ( 0 ), NULL )
+    horn_add_clause( ( h ), ( conclusion ), ( 0 ), NULL )
 
 }  // namespace taocp

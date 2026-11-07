@@ -15,7 +15,7 @@ using taocp::eval::ID;
 int
 main( )
 {
-        auto bench = Bench::get( ID::Waerden339 );
-        taocp::eval::printBenchInfo( bench.info );
-        return 0;
+    auto bench = Bench::get( ID::Waerden339 );
+    taocp::eval::printBenchInfo( bench.info );
+    return 0;
 }

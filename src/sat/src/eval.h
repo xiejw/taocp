@@ -16,19 +16,19 @@ namespace taocp::eval {
 
 /// A literal: `Literal{k}` is x_k and `Literal{-k}` is ¬x_k, with k >= 1.
 struct Literal {
-        ssize_t v;
+    ssize_t v;
 
-        /// Returns the positive literal x_v. `v` must be positive.
-        static auto newPos( ssize_t v ) -> Literal;
+    /// Returns the positive literal x_v. `v` must be positive.
+    static auto newPos( ssize_t v ) -> Literal;
 
-        /// Returns the negative literal ¬x_v. `v` must be positive.
-        static auto newNeg( ssize_t v ) -> Literal;
+    /// Returns the negative literal ¬x_v. `v` must be positive.
+    static auto newNeg( ssize_t v ) -> Literal;
 
-        /// Parses DIMACS notation: `k` means x_k and `-k` means ¬x_k. `l` must
-        /// be nonzero.
-        static auto fromDimacs( ssize_t l ) -> Literal;
+    /// Parses DIMACS notation: `k` means x_k and `-k` means ¬x_k. `l` must
+    /// be nonzero.
+    static auto fromDimacs( ssize_t l ) -> Literal;
 
-        auto operator==( const Literal &o ) const -> bool { return v == o.v; }
+    auto operator==( const Literal &o ) const -> bool { return v == o.v; }
 };
 
 // === --- Bench and ID ---------------------------------------------------- ===
@@ -36,34 +36,34 @@ struct Literal {
 
 /// Identifies a benchmark problem.
 enum class ID {
-        Rivest,
-        Waerden339,
+    Rivest,
+    Waerden339,
 };
 
 /// Where a benchmark problem comes from in TAOCP.
 struct BenchInfo {
-        const char *vol;
-        const char *page;
-        const char *eqn;
-        const char *name;
-        size_t      num_vars;
+    const char *vol;
+    const char *page;
+    const char *eqn;
+    const char *name;
+    size_t      num_vars;
 };
 
 /// Clause j is `clauses[begin, end)` where `{begin, end} = segments[j]`.
 struct Segment {
-        size_t begin;
-        size_t end;
+    size_t begin;
+    size_t end;
 };
 
 /// A benchmark problem.
 struct Bench {
-        BenchInfo info;
-        /// All literals of all clauses, laid out one clause after another.
-        std::vector<Literal> clauses;
-        std::vector<Segment> segments;
+    BenchInfo info;
+    /// All literals of all clauses, laid out one clause after another.
+    std::vector<Literal> clauses;
+    std::vector<Segment> segments;
 
-        /// Returns the benchmark problem identified by `id`.
-        static auto get( ID id ) -> Bench;
+    /// Returns the benchmark problem identified by `id`.
+    static auto get( ID id ) -> Bench;
 };
 
 /// Prints the bench info to stdout.

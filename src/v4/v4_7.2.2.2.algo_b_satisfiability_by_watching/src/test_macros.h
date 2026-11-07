@@ -23,7 +23,7 @@
 //
 
 #define EXPECT_TRUE( eq_condition, msg ) \
-        _EXPECT_TRUE_IMPL( eq_condition, msg, __FILE__, __LINE__ )
+    _EXPECT_TRUE_IMPL( eq_condition, msg, __FILE__, __LINE__ )
 
 //
 // === --- Registry -------------------------------------------------------- ===
@@ -48,43 +48,42 @@ namespace forge {
 inline std::vector<std::pair<const char *, std::function<void( )>>> &
 test_suite_registry( )
 {
-        static std::vector<std::pair<const char *, std::function<void( )>>>
-            funcs;
-        return funcs;
+    static std::vector<std::pair<const char *, std::function<void( )>>> funcs;
+    return funcs;
 }
 
 inline void
 test_suite_run( )
 {
-        for ( auto &f : test_suite_registry( ) ) {
-                printf( "[ RUN ] %s", f.first );
-                f.second( );
-                printf( ".\n" );
-        }
-        printf( "Test passed.\n" );
+    for ( auto &f : test_suite_registry( ) ) {
+        printf( "[ RUN ] %s", f.first );
+        f.second( );
+        printf( ".\n" );
+    }
+    printf( "Test passed.\n" );
 }
 }  // namespace forge
 
-#define FORGE_TEST( fn_name )                                      \
-        void fn_name( );                                           \
-        struct fn_name##_registrar {                               \
-                fn_name##_registrar( )                             \
-                {                                                  \
-                        ::forge::test_suite_registry( ).push_back( \
-                            { #fn_name, fn_name } );               \
-                }                                                  \
-        };                                                         \
-        static fn_name##_registrar fn_name##_instance;             \
-        void                       fn_name( )
+#define FORGE_TEST( fn_name )                          \
+    void fn_name( );                                   \
+    struct fn_name##_registrar {                       \
+        fn_name##_registrar( )                         \
+        {                                              \
+            ::forge::test_suite_registry( ).push_back( \
+                { #fn_name, fn_name } );               \
+        }                                              \
+    };                                                 \
+    static fn_name##_registrar fn_name##_instance;     \
+    void                       fn_name( )
 
 //
 // === --- Implementation Code --------------------------------------------- ===
 //
-#define _EXPECT_TRUE_IMPL( eq_condition, msg, file, line )                 \
-        do {                                                               \
-                if ( !( eq_condition ) ) {                                 \
-                        printf( "Assertion failed. %s:%d\n", file, line ); \
-                        printf( msg "\n" );                                \
-                        exit( -1 );                                        \
-                }                                                          \
-        } while ( 0 )
+#define _EXPECT_TRUE_IMPL( eq_condition, msg, file, line )     \
+    do {                                                       \
+        if ( !( eq_condition ) ) {                             \
+            printf( "Assertion failed. %s:%d\n", file, line ); \
+            printf( msg "\n" );                                \
+            exit( -1 );                                        \
+        }                                                      \
+    } while ( 0 )

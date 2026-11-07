@@ -26,41 +26,41 @@
 namespace taocp {
 
 struct TwoSatSolver {
-      private:
-        size_t   n_;
-        SGBGraph g_;
+  private:
+    size_t   n_;
+    SGBGraph g_;
 
-      public:
-        /// Prepare a solver for 2SAT with num_vars of variables. Internally, 2
-        /// num_vars variables will be prepared, one for the variable and one
-        /// for the complement.
-        TwoSatSolver( size_t num_vars );
+  public:
+    /// Prepare a solver for 2SAT with num_vars of variables. Internally, 2
+    /// num_vars variables will be prepared, one for the variable and one
+    /// for the complement.
+    TwoSatSolver( size_t num_vars );
 
-      public:
-        /// Add a Krom clause (v_id || u_id). For complement for a variable v,
-        /// use getComplementId(v) as input.
-        void addKromClause( size_t v_id, size_t u_id );
+  public:
+    /// Add a Krom clause (v_id || u_id). For complement for a variable v,
+    /// use getComplementId(v) as input.
+    void addKromClause( size_t v_id, size_t u_id );
 
-        /// Returns true if the 2SAT is satisfiable.
-        bool checkSatisfiability( );
+    /// Returns true if the 2SAT is satisfiable.
+    bool checkSatisfiability( );
 
-        /// Return an ID as complement of var_id.
-        ///
-        /// Invariant: getComplementId(getComplementId(v)) == v.
-        size_t getComplementId( size_t var_id )
-        {
-                return var_id >= n_ ? var_id - n_ : var_id + n_;
-        }
+    /// Return an ID as complement of var_id.
+    ///
+    /// Invariant: getComplementId(getComplementId(v)) == v.
+    size_t getComplementId( size_t var_id )
+    {
+        return var_id >= n_ ? var_id - n_ : var_id + n_;
+    }
 
-        /// Return an canonical ID of var_id so it is not complement and can be
-        /// used as a canonical ID.
-        ///
-        /// Invariant:
-        ///   getCanonicalId(v) = getCanonicalId(getComplementId(v))
-        size_t getCanonicalId( size_t var_id )
-        {
-                return var_id >= n_ ? var_id - n_ : var_id;
-        }
+    /// Return an canonical ID of var_id so it is not complement and can be
+    /// used as a canonical ID.
+    ///
+    /// Invariant:
+    ///   getCanonicalId(v) = getCanonicalId(getComplementId(v))
+    size_t getCanonicalId( size_t var_id )
+    {
+        return var_id >= n_ ? var_id - n_ : var_id;
+    }
 };
 
 }  // namespace taocp

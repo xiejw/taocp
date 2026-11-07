@@ -56,45 +56,45 @@ uint64_t counter = 0;
 void
 VisitSolution( int64_t *A )
 {
-        counter++;
+    counter++;
 
-        if ( !PRINT_SOLUTION ) return;
+    if ( !PRINT_SOLUTION ) return;
 
-        int64_t X[1 + kNumQueue];
+    int64_t X[1 + kNumQueue];
 
-        // Deduce the t based on A based on the hint of exercise 10.
-        for ( int i = 1; i <= kNumQueue; i++ ) {
-                int64_t t = A[i + 1] - A[i];
-                // Deduce the x from t (pos is 0 based).
-                int     pos = 0;
-                int64_t x   = t;
-                while ( ( x & 1 ) == 0 ) {
-                        x >>= 1;
-                        pos++;
-                }
-                pos++;  // Convert 0 based to 1 based.
-                X[i] = pos;
-
-                printf( "%d -> t %3d -> pos %d\n", i, (int)t, pos );
+    // Deduce the t based on A based on the hint of exercise 10.
+    for ( int i = 1; i <= kNumQueue; i++ ) {
+        int64_t t = A[i + 1] - A[i];
+        // Deduce the x from t (pos is 0 based).
+        int     pos = 0;
+        int64_t x   = t;
+        while ( ( x & 1 ) == 0 ) {
+            x >>= 1;
+            pos++;
         }
+        pos++;  // Convert 0 based to 1 based.
+        X[i] = pos;
 
-        // Plot the board with all queues.
+        printf( "%d -> t %3d -> pos %d\n", i, (int)t, pos );
+    }
+
+    // Plot the board with all queues.
+    printf( "|" );
+    for ( int i = 1; i <= kNumQueue; i++ ) {
+        printf( "%d", i );
+    }
+    printf( "|\n" );
+
+    for ( int i = 1; i <= kNumQueue; i++ ) {
+        int64_t x = X[i];
         printf( "|" );
-        for ( int i = 1; i <= kNumQueue; i++ ) {
-                printf( "%d", i );
+        for ( int col = 1; col <= kNumQueue; col++ ) {
+            printf( "%c", col == x ? 'X' : ' ' );
         }
         printf( "|\n" );
-
-        for ( int i = 1; i <= kNumQueue; i++ ) {
-                int64_t x = X[i];
-                printf( "|" );
-                for ( int col = 1; col <= kNumQueue; col++ ) {
-                        printf( "%c", col == x ? 'X' : ' ' );
-                }
-                printf( "|\n" );
-        }
-        printf( "One solution is printed. Abort now so you can read.\n" );
-        exit( 0 );
+    }
+    printf( "One solution is printed. Abort now so you can read.\n" );
+    exit( 0 );
 }
 
 // === --- Algorithm W - Walker Backtrack - Vol 4B Page 33 ------------------
@@ -104,143 +104,143 @@ VisitSolution( int64_t *A )
 void
 Search( )
 {
-        /// Mask
-        constexpr int64_t U = ( 1 << ( kNumQueue ) ) - 1;
+    /// Mask
+    constexpr int64_t U = ( 1 << ( kNumQueue ) ) - 1;
 
-        // All arrays start from base 1. All arrays might go to kNumQueue + 1
-        // level.
-        int64_t A[kNumQueue + 1 + 1] = { 0 };
-        int64_t B[kNumQueue + 1 + 1] = { 0 };
-        int64_t C[kNumQueue + 1 + 1] = { 0 };
-        int64_t S[kNumQueue + 1 + 1] = { 0 };
+    // All arrays start from base 1. All arrays might go to kNumQueue + 1
+    // level.
+    int64_t A[kNumQueue + 1 + 1] = { 0 };
+    int64_t B[kNumQueue + 1 + 1] = { 0 };
+    int64_t C[kNumQueue + 1 + 1] = { 0 };
+    int64_t S[kNumQueue + 1 + 1] = { 0 };
 
-        int l;
+    int l;
 
-        int64_t t;    // tmp var
-        int64_t a_l;  // tmp var to store A[l];
-        int64_t b_l;  // tmp var to store B[l];
-        int64_t c_l;  // tmp var to store C[l];
-        int64_t s_l;  // tmp var to store S[l];
+    int64_t t;    // tmp var
+    int64_t a_l;  // tmp var to store A[l];
+    int64_t b_l;  // tmp var to store B[l];
+    int64_t c_l;  // tmp var to store C[l];
+    int64_t s_l;  // tmp var to store S[l];
 
-        goto W1;
+    goto W1;
 
 W1:  // Initialize
-        l   = 1;
-        a_l = b_l = c_l = 0;
+    l   = 1;
+    a_l = b_l = c_l = 0;
 
-        // Fallthrough
+    // Fallthrough
 
 W2:  // Enter level l
-        if ( l > kNumQueue ) {
-                VisitSolution( &A[0] );
-                goto W4;
-        }
+    if ( l > kNumQueue ) {
+        VisitSolution( &A[0] );
+        goto W4;
+    }
 
-        // Invariant.
-        assert( l >= 1 && l <= kNumQueue );
+    // Invariant.
+    assert( l >= 1 && l <= kNumQueue );
 
-        /// Update S[l]
+    /// Update S[l]
 
-        // NOTE:
-        // There are two possible branches touching here
-        // 1. From W1, a_l/b_l/c_l are initialized already.
-        // 2. From W3's goto W2, where all a_l/b_l/c_l are stored in
-        //    registers already.
-        //
-        // The following 3 MEM_R can be saved for each level advance!
-        //
-        // a_l = MEM_R( A, l );
-        // b_l = MEM_R( B, l );
-        // c_l = MEM_R( C, l );
-        //
-        t   = a_l | b_l | c_l;
-        s_l = U & ( ~( t ) );
+    // NOTE:
+    // There are two possible branches touching here
+    // 1. From W1, a_l/b_l/c_l are initialized already.
+    // 2. From W3's goto W2, where all a_l/b_l/c_l are stored in
+    //    registers already.
+    //
+    // The following 3 MEM_R can be saved for each level advance!
+    //
+    // a_l = MEM_R( A, l );
+    // b_l = MEM_R( B, l );
+    // c_l = MEM_R( C, l );
+    //
+    t   = a_l | b_l | c_l;
+    s_l = U & ( ~( t ) );
 
-        /* NOTE:
+    /* NOTE:
 
-           This special optimization can roughly reduce mems from 6'952'497'635
-           to 6'893'407'587 mems as it skips the entire W3 for 'unnecessary'
-           execution.
+       This special optimization can roughly reduce mems from 6'952'497'635
+       to 6'893'407'587 mems as it skips the entire W3 for 'unnecessary'
+       execution.
 
-           In order to visit the solution X, we could deduce the final bit with
+       In order to visit the solution X, we could deduce the final bit with
 
-              t = s_l & ( -s_l )
+          t = s_l & ( -s_l )
 
-           That's it. All the MEM_W in the W3 can be skipped.
+       That's it. All the MEM_W in the W3 can be skipped.
 
-           Keep the code in comment so the code looks similar to the algorithm
-           in the book.
-        */
-        // if ( s_l != 0 && l == kNumQueue ) {
-        //         l++;
-        //         VisitSolution( );
-        //         goto W4;
-        // }
+       Keep the code in comment so the code looks similar to the algorithm
+       in the book.
+    */
+    // if ( s_l != 0 && l == kNumQueue ) {
+    //         l++;
+    //         VisitSolution( );
+    //         goto W4;
+    // }
 
-        // Fallthrough
+    // Fallthrough
 
 W3:  // Try advance
 
-        // Invariant.
-        assert( l >= 1 && l <= kNumQueue );
+    // Invariant.
+    assert( l >= 1 && l <= kNumQueue );
 
-        // NOTE: If W2 and W4 have s_l ==0 check. This branch can be removed.
-        if ( s_l == 0 ) {  // S_l is empty
-                goto W4;   // Backtrack
-        }
+    // NOTE: If W2 and W4 have s_l ==0 check. This branch can be removed.
+    if ( s_l == 0 ) {  // S_l is empty
+        goto W4;       // Backtrack
+    }
 
-        // NOTE: s_l is prepared in W2 or W4 already. So no need to load
-        // memory now.
-        t = s_l & ( -s_l );
+    // NOTE: s_l is prepared in W2 or W4 already. So no need to load
+    // memory now.
+    t = s_l & ( -s_l );
 
-        // NOTE:
-        // 1. a_l/b_l/c_l are prepared in label W2 and W4 already. No need to
-        //    load them in this tight loop.
-        // 2. Store a_l/b_l/c_l in place so the goto W2 later can skip the load.
-        //
-        a_l = a_l + t;
-        b_l = ( b_l + t ) >> 1;
-        c_l = ( ( c_l + t ) << 1 ) & U;
+    // NOTE:
+    // 1. a_l/b_l/c_l are prepared in label W2 and W4 already. No need to
+    //    load them in this tight loop.
+    // 2. Store a_l/b_l/c_l in place so the goto W2 later can skip the load.
+    //
+    a_l = a_l + t;
+    b_l = ( b_l + t ) >> 1;
+    c_l = ( ( c_l + t ) << 1 ) & U;
 
-        // Store them in case backtrack
-        MEM_W( A, l + 1, a_l );
-        MEM_W( B, l + 1, b_l );
-        MEM_W( C, l + 1, c_l );
+    // Store them in case backtrack
+    MEM_W( A, l + 1, a_l );
+    MEM_W( B, l + 1, b_l );
+    MEM_W( C, l + 1, c_l );
 
-        // This is the undo work for W4. Mentioned in Exercise 10
-        s_l = s_l - t;
+    // This is the undo work for W4. Mentioned in Exercise 10
+    s_l = s_l - t;
 
-        MEM_W( S, l, s_l );  // Store to memory for backtrack.
+    MEM_W( S, l, s_l );  // Store to memory for backtrack.
 
-        l++;
-        goto W2;
+    l++;
+    goto W2;
 
 W4:  // Backtrack
-        l--;
+    l--;
 
-        if ( l == 0 ) {
-                return;
-        }
+    if ( l == 0 ) {
+        return;
+    }
 
-        assert( l > 0 );
-        // No UNDO Work to do as Done in W3 already.
+    assert( l > 0 );
+    // No UNDO Work to do as Done in W3 already.
 
-        // Load from memory for backtrack so both W4->W3 and W2->W3 can prepare
-        // s_l already.
-        s_l = MEM_R( S, l );
+    // Load from memory for backtrack so both W4->W3 and W2->W3 can prepare
+    // s_l already.
+    s_l = MEM_R( S, l );
 
-        // Skip checking this in W3 and goto W4 for backtrack directly.
-        if ( s_l == 0 ) {
-                goto W4;
-        }
+    // Skip checking this in W3 and goto W4 for backtrack directly.
+    if ( s_l == 0 ) {
+        goto W4;
+    }
 
-        // Similar to the s_l idea above, load a_l/b_l/c_l from memory  so both
-        // W4->W3 and W2->W3 can prepare them  already.
-        //
-        a_l = MEM_R( A, l );
-        b_l = MEM_R( B, l );
-        c_l = MEM_R( C, l );
-        goto W3;
+    // Similar to the s_l idea above, load a_l/b_l/c_l from memory  so both
+    // W4->W3 and W2->W3 can prepare them  already.
+    //
+    a_l = MEM_R( A, l );
+    b_l = MEM_R( B, l );
+    c_l = MEM_R( C, l );
+    goto W3;
 }
 
 }  // namespace
@@ -248,9 +248,8 @@ W4:  // Backtrack
 int
 main( )
 {
-        INFO( "Walker's Backtrack (Vol 4B, Page 33) - N Queue: N = %d",
-              kNumQueue );
-        Search( );
-        INFO( "Done: %" PRIu64, counter );
-        INFO( "Memory Access: %" PRIu64, mem_access_counter );
+    INFO( "Walker's Backtrack (Vol 4B, Page 33) - N Queue: N = %d", kNumQueue );
+    Search( );
+    INFO( "Done: %" PRIu64, counter );
+    INFO( "Memory Access: %" PRIu64, mem_access_counter );
 }

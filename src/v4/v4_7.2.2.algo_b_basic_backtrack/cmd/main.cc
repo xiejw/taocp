@@ -41,69 +41,68 @@ uint64_t counter = 0;
 void
 VisitSolution( )
 {
-        counter++;
+    counter++;
 }
 
 // === --- Algorithm B - Basic Backtrack - Vol 4B Page 32 ------------------ ===
 void
 Search( )
 {
-        int t;
-        int l;
+    int t;
+    int l;
 
-        goto B1;
+    goto B1;
 
 B1:  // Initialize
-        l = 1;
+    l = 1;
 
-        // Fallthrough
+    // Fallthrough
 
 B2:  // Enter level l
-        if ( l > kNum ) {
-                VisitSolution( );
-                goto B5;
-        }
+    if ( l > kNum ) {
+        VisitSolution( );
+        goto B5;
+    }
 
-        // Scan domain now.
-        t = 1;
+    // Scan domain now.
+    t = 1;
 
-        // Fallthrough
+    // Fallthrough
 
 B3:  // Try t
-        if ( MEM_R( A, t ) || MEM_R( B, t + l - 1 ) ||
-             MEM_R( C, t - l + kNum ) ) {
-                goto B4;
-        }
+    if ( MEM_R( A, t ) || MEM_R( B, t + l - 1 ) || MEM_R( C, t - l + kNum ) ) {
+        goto B4;
+    }
 
-        MEM_W( A, t, 1 );
-        MEM_W( B, t + l - 1, 1 );
-        MEM_W( C, t - l + kNum, 1 );
-        MEM_W( X, l, t );
-        l++;
-        goto B2;
+    MEM_W( A, t, 1 );
+    MEM_W( B, t + l - 1, 1 );
+    MEM_W( C, t - l + kNum, 1 );
+    MEM_W( X, l, t );
+    l++;
+    goto B2;
 
 B4:  // Try next t
-        if ( t < kNum ) {
-                t++;
-                goto B3;
-        }
+    if ( t < kNum ) {
+        t++;
+        goto B3;
+    }
 
-        // Fallthrough
+    // Fallthrough
 
 B5:  // Backtrack
-        l--;
-        if ( l > 0 ) {
-                t = MEM_R( X, l );
-                MEM_W( C, t - l + kNum, 0 );
-                MEM_W( B, t + l - 1, 0 );
-                MEM_W( A, t, 0 );
-                goto B4;
-        }
+    l--;
+    if ( l > 0 ) {
+        t = MEM_R( X, l );
+        MEM_W( C, t - l + kNum, 0 );
+        MEM_W( B, t + l - 1, 0 );
+        MEM_W( A, t, 0 );
+        goto B4;
+    }
 
-        // Fallthrough
+    // Fallthrough
 
-        // Exit
-        return;
+    // Exit
+    return;
 }
 
 }  // namespace
@@ -111,8 +110,8 @@ B5:  // Backtrack
 int
 main( )
 {
-        INFO( "Basic Backtrack (Vol 4B, Page 32) - N Queue: N = %d", kNum );
-        Search( );
-        INFO( "Done: %" PRIu64, counter );
-        INFO( "Memory Access: %" PRIu64, mem_access_counter );
+    INFO( "Basic Backtrack (Vol 4B, Page 32) - N Queue: N = %d", kNum );
+    Search( );
+    INFO( "Done: %" PRIu64, counter );
+    INFO( "Memory Access: %" PRIu64, mem_access_counter );
 }
