@@ -15,16 +15,16 @@ namespace {
 auto
 runSolver( ) -> void
 {
-        INFO( "==== --- Demo Problem for Algorithm C --- ===" );
-        INFO( "==== --- Satisfiability by CDCL --------- ===" );
+    INFO( "==== --- Demo Problem for Algorithm C --- ===" );
+    INFO( "==== --- Satisfiability by CDCL --------- ===" );
 
-        // Emit clause
+    // Emit clause
 }
 }  // namespace
 
 int
 main( )
 {
-        runSolver( );
-        return 0;
+    runSolver( );
+    return 0;
 }

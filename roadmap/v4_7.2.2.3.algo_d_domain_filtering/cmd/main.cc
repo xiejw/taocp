@@ -8,31 +8,31 @@ namespace {
 auto
 RunSolver( ) -> void
 {
-        INFO( "==== --- Demo Problem for Algorithm D --- ===" );
-        // WatchSolver sov{ /*num_literals=*/3, /*num_causes=*/4 };
+    INFO( "==== --- Demo Problem for Algorithm D --- ===" );
+    // WatchSolver sov{ /*num_literals=*/3, /*num_causes=*/4 };
 
-        // INFO( "Emit Clauses:" );
-        // PrintAndEmitClause( &sov, { 1 } );
-        // PrintAndEmitClause( &sov, { 1, C( 2 ) } );
-        // PrintAndEmitClause( &sov, { 2, C( 3 ) } );
-        // PrintAndEmitClause( &sov, { 2, 3 } );
+    // INFO( "Emit Clauses:" );
+    // PrintAndEmitClause( &sov, { 1 } );
+    // PrintAndEmitClause( &sov, { 1, C( 2 ) } );
+    // PrintAndEmitClause( &sov, { 2, C( 3 ) } );
+    // PrintAndEmitClause( &sov, { 2, 3 } );
 
-        //// INFO( "Debug Print:" );
-        //// sov.dump_debug_info( );
+    //// INFO( "Debug Print:" );
+    //// sov.dump_debug_info( );
 
-        // if ( auto res = sov.SearchOneSolution( ); res ) {
-        //         INFO( "Satisfiable!!!" );
-        //         INFO( "Result:" );
-        //         PrintClause( res.value( ).size( ), res.value( ).data( ) );
-        // } else {
-        //         PANIC( "Unsatisfiable" );
-        // }
+    // if ( auto res = sov.SearchOneSolution( ); res ) {
+    //         INFO( "Satisfiable!!!" );
+    //         INFO( "Result:" );
+    //         PrintClause( res.value( ).size( ), res.value( ).data( ) );
+    // } else {
+    //         PANIC( "Unsatisfiable" );
+    // }
 }
 }  // namespace
 
 int
 main( )
 {
-        RunSolver( );
-        return 0;
+    RunSolver( );
+    return 0;
 }

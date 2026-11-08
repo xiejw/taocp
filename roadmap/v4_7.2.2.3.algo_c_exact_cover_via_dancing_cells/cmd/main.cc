@@ -12,6 +12,6 @@
 int
 main( )
 {
-        INFO( "Hello" );
-        return 0;
+    INFO( "Hello" );
+    return 0;
 }

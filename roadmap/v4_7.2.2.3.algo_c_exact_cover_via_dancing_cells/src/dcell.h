@@ -11,15 +11,14 @@
 namespace taocp {
 
 struct DCellTable {
-      private:
-        std::vector<i64> SET;
-        std::vector<i64> ITEM;
-        std::vector<i64> NODE;
+  private:
+    std::vector<i64> SET;
+    std::vector<i64> ITEM;
+    std::vector<i64> NODE;
 
-      public:
-        DCellTable( size_t item_count )
-            : SET( ), ITEM( item_count ), NODE( ) {};
+  public:
+    DCellTable( size_t item_count ) : SET( ), ITEM( item_count ), NODE( ) {};
 
-        // Dry run?
+    // Dry run?
 };
 }  // namespace taocp

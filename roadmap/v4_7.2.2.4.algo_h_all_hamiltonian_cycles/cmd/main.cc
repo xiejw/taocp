@@ -15,5 +15,5 @@ FORGE_TEST( test ) { return NULL; }
 int
 main( )
 {
-        forge::test_suite_run( );
+    forge::test_suite_run( );
 }
