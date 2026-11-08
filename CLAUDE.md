@@ -61,7 +61,7 @@ All binaries output to `.build/` within each module directory.
 ## Code Style Conventions
 
 General C++ naming, error handling, and project-layout conventions are defined
-in `doc/lang_cc.md` — read it before writing or editing C++ code. This
+in `doc/lang.md` — read it before writing or editing C++ code. This
 repository additionally follows these TAOCP-specific conventions:
 
 - **Goto-based state machines**: Steps like `B1:`, `B2:` etc. directly mirror TAOCP pseudocode labels. This is intentional — do not refactor gotos away.

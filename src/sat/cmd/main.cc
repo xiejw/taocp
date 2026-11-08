@@ -16,6 +16,6 @@ int
 main( )
 {
     auto bench = Bench::get( ID::Waerden339 );
-    taocp::eval::printBenchInfo( bench.info );
+    taocp::eval::printBenchInfo( &bench.info );
     return 0;
 }

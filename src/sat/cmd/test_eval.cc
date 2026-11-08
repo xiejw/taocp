@@ -16,7 +16,7 @@ namespace {
 
 /// Brute-force: true if some assignment satisfies every clause.
 ///
-/// Tries all 2^n assignments, where n = `b.info.num_vars`. An assignment is a
+/// Tries all 2^n assignments, where n = `b->info.num_vars`. An assignment is a
 /// uint64_t `bits` whose bit k-1 holds the value of x_k (1 = true), so counting
 /// `bits` from 0 to 2^n - 1 visits every assignment exactly once.
 ///
@@ -28,15 +28,15 @@ namespace {
 /// Cost is O(2^n * total literals), which is fine for the small benchmarks
 /// here; it requires n <= 63 so `1 << n` fits in a uint64_t.
 auto
-satisfiable_by_brute_force( const Bench &b ) -> bool
+satisfiable_by_brute_force( const Bench *b ) -> bool
 {
-    for ( uint64_t bits = 0; bits < ( uint64_t{ 1 } << b.info.num_vars );
+    for ( uint64_t bits = 0; bits < ( uint64_t{ 1 } << b->info.num_vars );
           bits++ ) {
         bool all = true;
-        for ( auto &seg : b.segments ) {
+        for ( auto &seg : b->segments ) {
             bool any = false;
             for ( size_t j = seg.begin; j < seg.end; j++ ) {
-                ssize_t l = b.clauses[j].v;
+                ssize_t l = b->clauses[j].v;
                 auto    k = (uint64_t)( l > 0 ? l : -l );
                 bool    v = ( ( bits >> ( k - 1 ) ) & 1 ) == 1;
                 if ( l > 0 ? v : !v ) {
@@ -56,9 +56,8 @@ satisfiable_by_brute_force( const Bench &b ) -> bool
 
 /// True if `fn` terminates the process abnormally (e.g. via PANIC). Runs `fn`
 /// in a forked child so the test process survives.
-template <typename F>
 auto
-dies( F fn ) -> bool
+dies( void ( *fn )( ) ) -> bool
 {
     fflush( stdout );
     pid_t pid = fork( );
@@ -143,10 +142,10 @@ FORGE_TEST( segments_tile_clauses )
 
 FORGE_TEST( all_unsatisfiable )
 {
-    EXPECT_TRUE( !satisfiable_by_brute_force( Bench::get( ID::Rivest ) ),
-                 "rivest" );
-    EXPECT_TRUE( !satisfiable_by_brute_force( Bench::get( ID::Waerden339 ) ),
-                 "waerden" );
+    auto rivest  = Bench::get( ID::Rivest );
+    auto waerden = Bench::get( ID::Waerden339 );
+    EXPECT_TRUE( !satisfiable_by_brute_force( &rivest ), "rivest" );
+    EXPECT_TRUE( !satisfiable_by_brute_force( &waerden ), "waerden" );
     return NULL;
 }
 
@@ -154,7 +153,7 @@ FORGE_TEST( rivest_minus_last_clause_is_satisfiable )
 {
     auto r = Bench::get( ID::Rivest );
     r.segments.pop_back( );
-    EXPECT_TRUE( satisfiable_by_brute_force( r ), "satisfiable" );
+    EXPECT_TRUE( satisfiable_by_brute_force( &r ), "satisfiable" );
     return NULL;
 }
 

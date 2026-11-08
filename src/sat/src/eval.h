@@ -1,15 +1,44 @@
 // vim: ft=cpp
-// forge:v1
+// forge:v2
 //
-// Benchmark problems for evaluating SAT solvers.
+// Benchmark problems for evaluating SAT solvers. Header-only.
 #pragma once
 
-#include <vector>
-
+#include <stdarg.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 
+#include <array>
+#include <initializer_list>
+#include <vector>
+
 namespace taocp::eval {
+
+// === --- Panic ----------------------------------------------------------- ===
+//
+
+namespace detail {
+
+/// Prints `fmt` (printf-style) with the source location to stderr, then
+/// aborts the process.
+[[noreturn]] inline auto
+panic( const char *file, int line, const char *fmt, ... ) -> void
+{
+    ::fprintf( stderr, "PANIC [%s:%d] ", file, line );
+    va_list args;
+    va_start( args, fmt );
+    ::vfprintf( stderr, fmt, args );
+    va_end( args );
+    ::fprintf( stderr, "\n" );
+    ::abort( );
+}
+
+}  // namespace detail
+
+#define TAOCP_EVAL_PANIC( ... ) \
+    ::taocp::eval::detail::panic( __FILE__, __LINE__, __VA_ARGS__ )
 
 // === --- Literal --------------------------------------------------------- ===
 //
@@ -18,17 +47,30 @@ namespace taocp::eval {
 struct Literal {
     ssize_t v;
 
-    /// Returns the positive literal x_v. `v` must be positive.
-    static auto newPos( ssize_t v ) -> Literal;
+    /// Returns the positive literal x_v. Panics unless `v` is positive.
+    static auto newPos( ssize_t v ) -> Literal
+    {
+        if ( v <= 0 ) TAOCP_EVAL_PANIC( "var id must be positive, got %zd", v );
+        return Literal{ v };
+    }
 
-    /// Returns the negative literal ¬x_v. `v` must be positive.
-    static auto newNeg( ssize_t v ) -> Literal;
+    /// Returns the negative literal ¬x_v. Panics unless `v` is positive.
+    static auto newNeg( ssize_t v ) -> Literal
+    {
+        if ( v <= 0 ) TAOCP_EVAL_PANIC( "var id must be positive, got %zd", v );
+        return Literal{ -v };
+    }
 
-    /// Parses DIMACS notation: `k` means x_k and `-k` means ¬x_k. `l` must
-    /// be nonzero.
-    static auto fromDimacs( ssize_t l ) -> Literal;
+    /// Parses DIMACS notation: `k` means x_k and `-k` means ¬x_k. Panics if
+    /// `l` is zero.
+    static auto fromDimacs( ssize_t l ) -> Literal
+    {
+        if ( l > 0 ) return newPos( l );
+        if ( l == 0 ) TAOCP_EVAL_PANIC( "DIMACS literal must be nonzero" );
+        return newNeg( -l );
+    }
 
-    auto operator==( const Literal &o ) const -> bool { return v == o.v; }
+    auto operator==( Literal o ) const -> bool { return v == o.v; }
 };
 
 // === --- Bench and ID ---------------------------------------------------- ===
@@ -66,7 +108,110 @@ struct Bench {
     static auto get( ID id ) -> Bench;
 };
 
-/// Prints the bench info to stdout.
-auto printBenchInfo( const BenchInfo &info ) -> void;
+namespace detail {
+
+/// Builds a `Bench` from clauses written in DIMACS notation: each literal is a
+/// nonzero integer, `k` for x_k and `-k` for ¬x_k (see `Literal::fromDimacs`).
+inline auto
+fromClauses( const BenchInfo                                             *info,
+             const std::initializer_list<std::initializer_list<ssize_t>> *cs )
+    -> Bench
+{
+    Bench b{ *info, { }, {} };
+    b.segments.reserve( cs->size( ) );
+    for ( auto &c : *cs ) {
+        size_t begin = b.clauses.size( );
+        for ( ssize_t l : c ) b.clauses.push_back( Literal::fromDimacs( l ) );
+        b.segments.push_back( { begin, b.clauses.size( ) } );
+    }
+    return b;
+}
+
+/// waerden(3,3;n): for every arithmetic progression i, i+d, i+2d in 1..=n, the
+/// clauses (x_i x_{i+d} x_{i+2d}) and (¬x_i ¬x_{i+d} ¬x_{i+2d}). All positive
+/// clauses come first, then all negative ones.
+inline auto
+waerden33( const BenchInfo *info ) -> Bench
+{
+    auto n = static_cast<ssize_t>( info->num_vars );
+
+    // Stage 1: generate all arithmetic progression (ap).
+    //
+    std::vector<std::array<ssize_t, 3>> aps;
+    for ( ssize_t d = 1; d <= ( n - 1 ) / 2; d++ ) {
+        for ( ssize_t i = 1; i <= n - 2 * d; i++ ) {
+            aps.push_back( { i, i + d, i + 2 * d } );
+        }
+    }
+
+    // Stage 2: fill into clauses and segments
+    // - 2 is due to poss and negs.
+    // - 3 is due to the number of literals in each ap
+    //
+    Bench b{ *info, { }, {} };
+    b.clauses.reserve( 2 * 3 * aps.size( ) );
+    b.segments.reserve( 2 * aps.size( ) );
+    for ( auto new_lit : { Literal::newPos, Literal::newNeg } ) {
+        for ( auto &ap : aps ) {
+            size_t begin = b.clauses.size( );
+            for ( ssize_t v : ap ) b.clauses.push_back( new_lit( v ) );
+            b.segments.push_back( { begin, b.clauses.size( ) } );
+        }
+    }
+    return b;
+}
+
+}  // namespace detail
+
+inline auto
+Bench::get( ID id ) -> Bench
+{
+    switch ( id ) {
+    case ID::Rivest: {
+        BenchInfo info{
+            /*vol=*/"4b",
+            /*page=*/"188",
+            /*eqn=*/"6",
+            /*name=*/"rivest",
+            /*num_vars=*/4,
+        };
+        std::initializer_list<std::initializer_list<ssize_t>> cs{
+            { 1,  2, -3},
+            { 2,  3, -4},
+            { 3,  4,  1},
+            { 4, -1,  2},
+            {-1, -2,  3},
+            {-2, -3,  4},
+            {-3, -4, -1},
+            {-4,  1, -2},
+        };
+        return detail::fromClauses( &info, &cs );
+    }
+    case ID::Waerden339: {
+        BenchInfo info{
+            /*vol=*/"4b",
+            /*page=*/"188",
+            /*eqn=*/"9",
+            /*name=*/"waerden(3,3;9)",
+            /*num_vars=*/9,
+        };
+        return detail::waerden33( &info );
+    }
+    }
+    TAOCP_EVAL_PANIC( "unknown bench id %d", static_cast<int>( id ) );
+}
+
+/// Prints the bench info `info` to stdout.
+inline auto
+printBenchInfo( const BenchInfo *info ) -> void
+{
+    ::printf( "BenchInfo {\n" );
+    ::printf( "    vol: \"%s\",\n", info->vol );
+    ::printf( "    page: \"%s\",\n", info->page );
+    ::printf( "    eqn: \"%s\",\n", info->eqn );
+    ::printf( "    name: \"%s\",\n", info->name );
+    ::printf( "    num_vars: %zu,\n", info->num_vars );
+    ::printf( "}\n" );
+}
 
 }  // namespace taocp::eval

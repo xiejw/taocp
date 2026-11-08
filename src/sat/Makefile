@@ -1,6 +1,3 @@
-MODS    += ${BUILD_OBJS}/log.o
-MODS    += ${BUILD_OBJS}/eval.o
-
 MAIN_OUT = main
 
 TEST_OUT = test_eval
