@@ -9,6 +9,24 @@
 
 namespace taocp {
 
+namespace {
+
+auto
+debugCheck( size_t num_literals, size_t size, const literal_t *lits ) -> void
+{
+    for ( size_t x = 0; x < size; x++ ) {
+        auto lit   = lits[x];
+        auto raw_v = DecodeRawLiteralValue( lit );
+        if ( raw_v > num_literals ) {
+            PANIC( "lit" );
+        }
+        if ( raw_v < 1 ) {
+            PANIC( "lit < 1" );
+        }
+    }
+}
+}  // namespace
+
 WatchSolver::WatchSolver( size_t num_literals, size_t num_clauses,
                           size_t num_reserved_cells )
     : num_literals_( num_literals ),
@@ -47,7 +65,7 @@ WatchSolver::emitClause( size_t size, const literal_t *lits ) -> void
     if ( num_emitted_clauses_ >= num_clauses_ )
         PANIC( "emitted clause is full. Cannot submit one more." );
 
-    this->DebugCheck( size, lits );
+    if ( DEBUG_MODE ) debugCheck( this->num_literals_, size, lits );
 
     /* Clause id is 1-based, and decreasing order. */
     auto clause_id = num_clauses_ - num_emitted_clauses_;
@@ -133,7 +151,6 @@ B2:  // Rejoice or choose
                     "--> sub level B3 to work on clause j = "
                     "%zu",
                     j );
-                dumpDebugInfo( );
             }
             /* A literal other than comp_l should be watched in
              * clause j. */
@@ -144,7 +161,6 @@ B2:  // Rejoice or choose
 
             if ( DEBUG_MODE ) {
                 if ( next_j > num_clauses_ ) {
-                    dumpDebugInfo( );
                     PANIC( "wrong next j" );
                 }
             }
@@ -232,79 +248,6 @@ B2:  // Rejoice or choose
     }
 
     return result; /* Exit happily */
-}
-
-auto
-WatchSolver::dumpDebugInfo( ) -> void
-{
-    //        /* === --- Internal
-    //        --------------------------------------------- === */
-    //        std::print( "internal\n" );
-    //        std::print( "  num_literals {:3}\n", num_literals_ );
-    //        std::print( "  num_clauses  {:3}\n", num_clauses_ );
-    //
-    //        /* === --- Cells
-    //        ------------------------------------------------ === */
-    //        std::print( "cells\n" );
-    //        for ( size_t i = 0; i < cells_.size( ); i++ ) {
-    //                std::print( "{:02} ", i );
-    //        }
-    //        std::print( "\n" );
-    //        for ( size_t i = 0; i < cells_.size( ); i++ ) {
-    //                std::print( "{:02} ", cells_[i] );
-    //        }
-    //        std::print( "\n" );
-    //
-    //        /* === --- Start
-    //        ------------------------------------------------ === */
-    //        std::print( "start\n" );
-    //        for ( size_t i = 0; i < start_.size( ); i++ ) {
-    //                std::print( "{:02} ", i );
-    //        }
-    //        std::print( "\n" );
-    //        for ( size_t i = 0; i < start_.size( ); i++ ) {
-    //                std::print( "{:02} ", start_[i] );
-    //        }
-    //        std::print( "\n" );
-    //
-    //        /* === --- Watch
-    //        ------------------------------------------------ === */
-    //        std::print( "watch\n" );
-    //        for ( size_t i = 0; i < watch_.size( ); i++ ) {
-    //                std::print( "{:02} ", i );
-    //        }
-    //        std::print( "\n" );
-    //        for ( size_t i = 0; i < watch_.size( ); i++ ) {
-    //                std::print( "{:02} ", watch_[i] );
-    //        }
-    //        std::print( "\n" );
-    //
-    //        /* === --- Link
-    //        ------------------------------------------------- === */
-    //        std::print( "link\n" );
-    //        for ( size_t i = 0; i < link_.size( ); i++ ) {
-    //                std::print( "{:02} ", i );
-    //        }
-    //        std::print( "\n" );
-    //        for ( size_t i = 0; i < link_.size( ); i++ ) {
-    //                std::print( "{:02} ", link_[i] );
-    //        }
-    //        std::print( "\n" );
-}
-
-auto
-WatchSolver::DebugCheck( size_t size, const literal_t *lits ) const -> void
-{
-    for ( size_t x = 0; x < size; x++ ) {
-        auto lit   = lits[x];
-        auto raw_v = DecodeRawLiteralValue( lit );
-        if ( raw_v > num_literals_ ) {
-            PANIC( "lit" );
-        }
-        if ( raw_v < 1 ) {
-            PANIC( "lit < 1" );
-        }
-    }
 }
 
 }  // namespace taocp

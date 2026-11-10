@@ -67,15 +67,5 @@ class WatchSolver {
     void emitClause( size_t size, const literal_t * );
     void emitClause( std::initializer_list<literal_t> );
     auto searchOneSolution( ) -> std::optional<std::vector<literal_t>>;
-
-  public:
-    /* === --- A set of debug tooling. ----------------------------- === */
-
-    /* Print the internal states of the solver. Orthogonal to debug mode. */
-    auto dumpDebugInfo( ) -> void;
-
-  private:
-    /// Validate all literals are in right value domain.
-    auto DebugCheck( size_t size, const literal_t * ) const -> void;
 };
 }  // namespace taocp
