@@ -92,11 +92,42 @@ class Literal {
 // === --- Bench and ID ---------------------------------------------------- ===
 //
 
-/// Identifies a benchmark problem.
+/// Identifies a benchmark problem. Add new IDs before `Count`, which is a
+/// sentinel holding the number of IDs and is not a valid benchmark.
 enum class ID {
     Rivest,
     Waerden339,
+    Count,
 };
+
+/// The number of benchmark problems.
+inline constexpr size_t kNumIDs = static_cast<size_t>( ID::Count );
+
+/// Returns every benchmark ID, in declaration order.
+///
+/// If the environment variable `TAOCP_SAT_EVAL_ID` is set, returns only the ID
+/// whose index (0-based, in declaration order) it names, e.g.
+/// `TAOCP_SAT_EVAL_ID=1` for `ID::Waerden339`. Panics if the value is not an
+/// integer in `[0, kNumIDs)`.
+inline auto
+getAllIDs( ) -> std::vector<ID>
+{
+    if ( const char *env = ::getenv( "TAOCP_SAT_EVAL_ID" ); env != nullptr ) {
+        char *end = nullptr;
+        long  idx = ::strtol( env, &end, 10 );
+        if ( *env == '\0' || *end != '\0' || idx < 0 ||
+             static_cast<size_t>( idx ) >= kNumIDs ) {
+            TAOCP_EVAL_PANIC( "TAOCP_SAT_EVAL_ID must be in [0, %zu), got \"%s\"",
+                              kNumIDs, env );
+        }
+        return { static_cast<ID>( idx ) };
+    }
+
+    std::vector<ID> ids;
+    ids.reserve( kNumIDs );
+    for ( size_t i = 0; i < kNumIDs; i++ ) ids.push_back( static_cast<ID>( i ) );
+    return ids;
+}
 
 /// Where a benchmark problem comes from in TAOCP.
 struct BenchInfo {
@@ -213,6 +244,8 @@ Bench::get( ID id ) -> Bench
         };
         return detail::waerden33( &info );
     }
+    case ID::Count:
+        break;
     }
     TAOCP_EVAL_PANIC( "unknown bench id %d", static_cast<int>( id ) );
 }

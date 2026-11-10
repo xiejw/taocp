@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "../../../sat/src/eval.h"
+#include "../../../sat/src/timer.h"
 #include "log.h"
 #include "sat_literal.h"
 #include "sat_watch.h"
@@ -35,7 +36,7 @@ emitBench( WatchSolver *solver, const eval::Bench *bench ) -> void
         for ( size_t i = seg.begin; i < seg.end; i++ ) {
             lits.push_back( toSolverLiteral( bench->clauses[i] ) );
         }
-        printClause( lits.size( ), lits.data( ) );
+        // printClause( lits.size( ), lits.data( ) );
         solver->emitClause( lits.size( ), lits.data( ) );
     }
 }
@@ -50,10 +51,18 @@ runSolver( eval::ID id ) -> void
     WatchSolver solver{ /*num_vars=*/bench.info.num_vars,
                         /*num_clauses=*/bench.segments.size( ) };
 
-    INFO( "Emit Clauses:" );
-    emitBench( &solver, &bench );
+    taocp::sat::Timer timer;
 
-    if ( auto res = solver.searchOneSolution( ); res ) {
+    INFO( "Emit Clauses:" );
+    timer.start( );
+    emitBench( &solver, &bench );
+    timer.stopAndReport( "emitBench" );
+
+    timer.start( );
+    auto res = solver.searchOneSolution( );
+    timer.stopAndReport( "searchOneSolution" );
+
+    if ( res ) {
         INFO( "Satisfiable!!!" );
         INFO( "Result:" );
         printClause( res.value( ).size( ), res.value( ).data( ) );
@@ -66,6 +75,6 @@ runSolver( eval::ID id ) -> void
 int
 main( )
 {
-    runSolver( eval::ID::Rivest );
+    for ( auto id : eval::getAllIDs( ) ) runSolver( id );
     return 0;
 }
