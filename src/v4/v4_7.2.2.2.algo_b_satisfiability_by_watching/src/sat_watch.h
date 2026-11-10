@@ -2,7 +2,8 @@
 // forge:v1
 //
 // Algorithm B: Satisfiability by Watching. Vol 4B Page 215.
-#pragma once
+#ifndef TAOCP_SRC_SAT_WATCH_H_
+#define TAOCP_SRC_SAT_WATCH_H_
 
 #include <initializer_list>
 #include <optional>
@@ -12,12 +13,9 @@
 
 namespace taocp {
 
-/* === --- Defined type for literals --------------------------------------- ===
- */
-
 class WatchSolver {
   private:
-    size_t num_literals_;
+    size_t num_vars_;
     size_t num_clauses_;
     size_t num_emitted_clauses_;
 
@@ -39,7 +37,7 @@ class WatchSolver {
      *
      * Index by literal. 1-based.
      */
-    std::vector<literal_t> watch_;
+    std::vector<size_t> watch_;
 
     /*
      * LINK(j) is the pointer to the next clause with the same watched
@@ -52,20 +50,22 @@ class WatchSolver {
   public:
     /* === --- Constructors ----------------------------------------- === */
 
-    /* For all constructors, num_literals and num_clauses are fixed and
+    /* For all constructors, num_vars and num_clauses are fixed and
      * cannot be changed anymore. num_reserved_cells should be the best
      * guess for the application. It requires one more space for the
      * placeholder. */
-    WatchSolver( size_t num_literals, size_t num_clauses,
+    WatchSolver( size_t num_vars, size_t num_clauses,
                  size_t num_reserved_cells );
-    WatchSolver( size_t num_literals, size_t num_clauses );
+    WatchSolver( size_t num_vars, size_t num_clauses );
 
     auto reserveCells( size_t num_cells ) -> void;
 
   public:
-    /* === --- Conform Base Class ----------------------------------- === */
-    void emitClause( size_t size, const literal_t * );
-    void emitClause( std::initializer_list<literal_t> );
-    auto searchOneSolution( ) -> std::optional<std::vector<literal_t>>;
+    /* === --- Clauses and Search ---------------------------------- === */
+    void emitClause( size_t size, const Literal *lits );
+    void emitClause( std::initializer_list<Literal> lits );
+    auto searchOneSolution( ) -> std::optional<std::vector<Literal>>;
 };
 }  // namespace taocp
+
+#endif  // TAOCP_SRC_SAT_WATCH_H_

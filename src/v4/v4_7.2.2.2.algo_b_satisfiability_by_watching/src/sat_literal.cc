@@ -5,29 +5,29 @@
 
 namespace taocp {
 namespace {
-constexpr size_t mask = 1 << ( sizeof( literal_t ) - 1 );
+constexpr Literal kMask = Literal{ 1 } << ( 8 * sizeof( Literal ) - 1 );
 }
 
 auto
-C( literal_t c ) -> literal_t
+complement( Literal lit ) -> Literal
 {
-    return c | mask;
+    return lit | kMask;
 }
 
 auto
-DecodeRawLiteralValue( literal_t c ) -> literal_t
+decodeVariable( Literal lit ) -> Literal
 {
-    return c & ( ~mask );
+    return lit & ( ~kMask );
 }
 
 auto
-IsLiteralComplement( literal_t c ) -> bool
+isLiteralComplement( Literal lit ) -> bool
 {
-    return c & mask;
+    return lit & kMask;
 }
 
 auto
-PrintClause( size_t size, const literal_t *lits ) -> void
+printClause( size_t size, const Literal *lits ) -> void
 {
     if ( size == 0 ) {
         printf( "(empty literals)\n" );
@@ -37,10 +37,10 @@ PrintClause( size_t size, const literal_t *lits ) -> void
     printf( "< " );
     for ( size_t x = 0; x < size; x++ ) {
         auto i = lits[x];
-        if ( IsLiteralComplement( i ) )
-            printf( "C(%3" PRI_literal "), ", DecodeRawLiteralValue( i ) );
+        if ( isLiteralComplement( i ) )
+            printf( "C(%3" PRI_LITERAL "), ", decodeVariable( i ) );
         else
-            printf( "%3" PRI_literal ", ", i );
+            printf( "%3" PRI_LITERAL ", ", i );
     }
     printf( " >\n" );
 }

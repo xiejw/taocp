@@ -1,6 +1,7 @@
 // vim: ft=cpp
 // forge:v1
-#pragma once
+#ifndef TAOCP_SRC_SAT_LITERAL_H_
+#define TAOCP_SRC_SAT_LITERAL_H_
 
 #include <vector>
 
@@ -15,23 +16,25 @@
  * === --- How to provide literal
  *
  * - To emit variable x, use 'x';
- * - To emit complement of variable x, use 'C(x)'.
+ * - To emit complement of variable x, use 'complement(x)'.
  * - Both cases are 1-based literals.
  *
  * === --- Free Functions
  *
- * - DecodeRawLiteralValue returns the absolute value of the variable x.
- * - IsLiteralComplement returns true if the encoded value is a complement.
- * - PrintClause prints the clause with literals nicely.
+ * - decodeVariable returns the variable x of the literal.
+ * - isLiteralComplement returns true if the encoded value is a complement.
+ * - printClause prints the clause with literals nicely.
  */
 namespace taocp {
 
-using literal_t = size_t;
-#define PRI_literal "zu"  // Used for printf.
+using Literal = size_t;
+#define PRI_LITERAL "zu"  // Used for printf.
 
-auto C( literal_t c ) -> literal_t;
+auto complement( Literal lit ) -> Literal;
 
-auto DecodeRawLiteralValue( literal_t c ) -> literal_t;
-auto IsLiteralComplement( literal_t c ) -> bool;
-auto PrintClause( size_t size, const literal_t * ) -> void;
+auto decodeVariable( Literal lit ) -> Literal;
+auto isLiteralComplement( Literal lit ) -> bool;
+auto printClause( size_t size, const Literal *lits ) -> void;
 }  // namespace taocp
+
+#endif  // TAOCP_SRC_SAT_LITERAL_H_

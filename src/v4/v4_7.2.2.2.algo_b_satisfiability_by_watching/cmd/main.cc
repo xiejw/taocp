@@ -5,39 +5,39 @@
 #include "sat_literal.h"
 #include "sat_watch.h"
 
-using taocp::C;
-using taocp::literal_t;
-using taocp::PrintClause;
+using taocp::complement;
+using taocp::Literal;
+using taocp::printClause;
 using taocp::WatchSolver;
 
 namespace {
 auto
-PrintAndEmitClause( WatchSolver *sov, std::initializer_list<literal_t> lits )
+printAndEmitClause( WatchSolver *solver, std::initializer_list<Literal> lits )
 {
-    PrintClause( lits.size( ), std::data( lits ) );
-    sov->emitClause( lits );
+    printClause( lits.size( ), std::data( lits ) );
+    solver->emitClause( lits );
 }
 
 auto
-RunSolver( ) -> void
+runSolver( ) -> void
 {
     INFO( "==== --- Demo Problem for Algorithm B --- ===" );
     INFO( "==== --- Satisfiability by Watching   --- ===" );
-    WatchSolver sov{ /*num_literals=*/3, /*num_causes=*/4 };
+    WatchSolver solver{ /*num_vars=*/3, /*num_clauses=*/4 };
 
     INFO( "Emit Clauses:" );
-    PrintAndEmitClause( &sov, { 1 } );
-    PrintAndEmitClause( &sov, { 1, C( 2 ) } );
-    PrintAndEmitClause( &sov, { 2, C( 3 ) } );
-    PrintAndEmitClause( &sov, { 2, 3 } );
+    printAndEmitClause( &solver, { 1 } );
+    printAndEmitClause( &solver, { 1, complement( 2 ) } );
+    printAndEmitClause( &solver, { 2, complement( 3 ) } );
+    printAndEmitClause( &solver, { 2, 3 } );
 
     // INFO( "Debug Print:" );
-    // sov.dumpDebugInfo( );
+    // solver.dumpDebugInfo( );
 
-    if ( auto res = sov.searchOneSolution( ); res ) {
+    if ( auto res = solver.searchOneSolution( ); res ) {
         INFO( "Satisfiable!!!" );
         INFO( "Result:" );
-        PrintClause( res.value( ).size( ), res.value( ).data( ) );
+        printClause( res.value( ).size( ), res.value( ).data( ) );
     } else {
         PANIC( "Unsatisfiable" );
     }
@@ -47,6 +47,6 @@ RunSolver( ) -> void
 int
 main( )
 {
-    RunSolver( );
+    runSolver( );
     return 0;
 }
