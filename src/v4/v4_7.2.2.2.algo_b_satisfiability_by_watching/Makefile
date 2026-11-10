@@ -10,10 +10,10 @@ include mk.tpl
 
 CXXFLAGS += -Wno-unused-label
 
-# Main is tested
+# Main is in `make test`
 $(eval $(call TEST_template,${MAIN_OUT}))
 
-# TEST is tested
+# TEST is in `make test`
 $(eval $(call CMD_template,${TEST_OUT}))
 $(eval $(call TEST_template,${TEST_OUT}))
 

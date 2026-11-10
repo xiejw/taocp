@@ -9,13 +9,13 @@
 // 188, Eq 9) and prints its BenchInfo to stdout.
 #include "eval.h"
 
-using taocp::eval::Bench;
-using taocp::eval::ID;
+using taocp::sat::eval::Bench;
+using taocp::sat::eval::ID;
 
 int
 main( )
 {
     auto bench = Bench::get( ID::Waerden339 );
-    taocp::eval::printBenchInfo( &bench.info );
+    taocp::sat::eval::printBenchInfo( &bench.info );
     return 0;
 }

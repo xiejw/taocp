@@ -7,7 +7,7 @@
 - `eval.h` must not include any project header (no `log.h`,
   `test_macros.h`, etc.) — only C/C++ standard headers. Copying the single
   file into another module must be enough to use it.
-- Internal helpers go in `namespace taocp::eval::detail` (not an anonymous
+- Internal helpers go in `namespace taocp::sat::eval::detail` (not an anonymous
   namespace, which would be duplicated per translation unit in a header).
 - Fatal errors use the header's own `TAOCP_EVAL_PANIC` (prints to stderr, then
   `abort()`), not the `PANIC` macro from `log.h`.

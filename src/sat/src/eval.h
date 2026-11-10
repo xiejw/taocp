@@ -12,9 +12,10 @@
 
 #include <array>
 #include <initializer_list>
+#include <utility>
 #include <vector>
 
-namespace taocp::eval {
+namespace taocp::sat::eval {
 
 // === --- Panic ----------------------------------------------------------- ===
 //
@@ -38,15 +39,16 @@ panic( const char *file, int line, const char *fmt, ... ) -> void
 }  // namespace detail
 
 #define TAOCP_EVAL_PANIC( ... ) \
-    ::taocp::eval::detail::panic( __FILE__, __LINE__, __VA_ARGS__ )
+    ::taocp::sat::eval::detail::panic( __FILE__, __LINE__, __VA_ARGS__ )
 
 // === --- Literal --------------------------------------------------------- ===
 //
 
-/// A literal: `Literal{k}` is x_k and `Literal{-k}` is ¬x_k, with k >= 1.
-struct Literal {
-    ssize_t v;
-
+/// A literal: either x_k or ¬x_k, with k >= 1. The encoding is private; build
+/// one with `newPos`, `newNeg` or `fromDimacs` and inspect it with
+/// `getVarAndSign`.
+class Literal {
+  public:
     /// Returns the positive literal x_v. Panics unless `v` is positive.
     static auto newPos( ssize_t v ) -> Literal
     {
@@ -70,7 +72,21 @@ struct Literal {
         return newNeg( -l );
     }
 
+    /// Returns `{k, pos}`: the variable id k >= 1 and whether the literal is
+    /// positive (`pos` is true for x_k and false for ¬x_k).
+    auto getVarAndSign( ) const -> std::pair<size_t, bool>
+    {
+        if ( v > 0 ) return { static_cast<size_t>( v ), true };
+        return { static_cast<size_t>( -v ), false };
+    }
+
     auto operator==( Literal o ) const -> bool { return v == o.v; }
+
+  private:
+    /// `k` for x_k and `-k` for ¬x_k.
+    ssize_t v;
+
+    explicit Literal( ssize_t v ) : v{ v } { }
 };
 
 // === --- Bench and ID ---------------------------------------------------- ===
@@ -214,4 +230,4 @@ printBenchInfo( const BenchInfo *info ) -> void
     ::printf( "}\n" );
 }
 
-}  // namespace taocp::eval
+}  // namespace taocp::sat::eval

@@ -8,9 +8,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-using taocp::eval::Bench;
-using taocp::eval::ID;
-using taocp::eval::Literal;
+using taocp::sat::eval::Bench;
+using taocp::sat::eval::ID;
+using taocp::sat::eval::Literal;
 
 namespace {
 
@@ -36,10 +36,9 @@ satisfiable_by_brute_force( const Bench *b ) -> bool
         for ( auto &seg : b->segments ) {
             bool any = false;
             for ( size_t j = seg.begin; j < seg.end; j++ ) {
-                ssize_t l = b->clauses[j].v;
-                auto    k = (uint64_t)( l > 0 ? l : -l );
-                bool    v = ( ( bits >> ( k - 1 ) ) & 1 ) == 1;
-                if ( l > 0 ? v : !v ) {
+                auto [k, pos] = b->clauses[j].getVarAndSign( );
+                bool v        = ( ( bits >> ( k - 1 ) ) & 1 ) == 1;
+                if ( pos ? v : !v ) {
                     any = true;
                     break;
                 }
@@ -84,8 +83,12 @@ FORGE_TEST( get_returns_num_vars )
 
 FORGE_TEST( literal_new )
 {
-    EXPECT_TRUE( Literal::newPos( 3 ) == Literal{ 3 }, "pos" );
-    EXPECT_TRUE( Literal::newNeg( 3 ) == Literal{ -3 }, "neg" );
+    EXPECT_TRUE( Literal::newPos( 3 ).getVarAndSign( ) ==
+                     std::make_pair( size_t{ 3 }, true ),
+                 "pos" );
+    EXPECT_TRUE( Literal::newNeg( 3 ).getVarAndSign( ) ==
+                     std::make_pair( size_t{ 3 }, false ),
+                 "neg" );
     return NULL;
 }
 
