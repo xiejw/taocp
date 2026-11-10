@@ -1,6 +1,32 @@
 // vim: ft=cpp
 //
 // A simple wall-clock timer on CLOCK_MONOTONIC. Header-only.
+//
+// Usage:
+//
+//   taocp::sat::Timer timer;
+//
+//   timer.start( );
+//   emitBench( &solver, &bench );
+//   timer.stopAndReport( "emitBench" );
+//
+//   timer.start( );  // one Timer can be reused
+//   auto res = solver.searchOneSolution( );
+//   timer.stopAndReport( "searchOneSolution" );
+//
+// Prints, e.g.: time spent on `emitBench`: 0.011 ms
+//
+// Recommendations:
+//
+// - Keep I/O (printing clauses, logging) out of the timed region; it can
+//   easily cost more than the work being measured.
+// - Measure optimized builds (`make RELEASE=1`); debug timings mislead.
+// - Small benchmarks finish in microseconds. For stable numbers, time a loop
+//   of many runs and divide, rather than trusting a single run.
+// - This is wall-clock time: other processes and the OS add noise. Run a few
+//   times and look at the minimum.
+// - The message is printed in pink using ANSI escapes, even when stdout is
+//   not a terminal.
 #pragma once
 
 #include <stdint.h>

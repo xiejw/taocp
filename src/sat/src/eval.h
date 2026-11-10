@@ -2,6 +2,15 @@
 // forge:v2
 //
 // Benchmark problems for evaluating SAT solvers. Header-only.
+//
+// Environment variables:
+//
+//   TAOCP_SAT_EVAL_ID  If set, `getAllIDs()` returns only the benchmark at
+//                      this 0-based index in `enum class ID` (declaration
+//                      order), instead of all of them. For example,
+//                      `TAOCP_SAT_EVAL_ID=1 ./.build/main` runs only
+//                      waerden(3,3;9). Panics if the value is not an integer
+//                      in [0, kNumIDs).
 #pragma once
 
 #include <stdarg.h>
