@@ -1,4 +1,5 @@
 // vim: ft=cpp
+// forge:v1
 //
 // A simple wall-clock timer on CLOCK_MONOTONIC. Header-only.
 //

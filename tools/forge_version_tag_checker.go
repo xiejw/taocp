@@ -22,11 +22,16 @@
 // below) and so is left blank to avoid the wasted read.
 //
 // Every scanned file is reported, one line to stdout, in fixed-width
-// columns (full path padded to 80 chars, base name padded to 20 chars,
-// tag padded to 6 chars, then the checksum) so that output lines up for
-// easy scanning/diffing:
+// columns (shortened path padded to the longest one, base name padded to
+// 20 chars, tag padded to 6 chars, then the checksum) so that output lines
+// up for easy scanning/diffing:
 //
-//	<full path (80)>  <base name (20)>  <tag (6)>  <checksum>
+//	<short path>  <base name (20)>  <tag (6)>  <checksum>
+//
+// The short path abbreviates each directory component longer than 3
+// characters to its first 2 characters plus "." (e.g. "axx/byy/czzz/f.h"
+// becomes "axx/byy/cz./f.h"). The error listings on stderr always use the
+// full path.
 //
 // where <tag> is "v0", "v1", ..., "skip", or "none". A tag of "none" means
 // no forge tag was found in the file's first 5 lines, which is treated as
@@ -101,9 +106,14 @@ func main() {
 		return results[i].fullPath < results[j].fullPath
 	})
 
+	pathWidth := 0
+	for _, r := range results {
+		pathWidth = max(pathWidth, len(shortPath(r.fullPath)))
+	}
+
 	var missing []string
 	for _, r := range results {
-		fmt.Printf("%-80s  %-20s  %-6s  %s\n", r.fullPath, r.baseName, r.tag, r.checksum)
+		fmt.Printf("%-*s  %-20s  %-6s  %s\n", pathWidth, shortPath(r.fullPath), r.baseName, r.tag, r.checksum)
 		if r.tag == noTag {
 			missing = append(missing, r.fullPath)
 		}
@@ -134,6 +144,20 @@ func main() {
 	}
 
 	os.Exit(1)
+}
+
+// shortPath abbreviates every directory component of path longer than 3
+// characters to its first 2 characters followed by "."; components of 1-3
+// characters and the base name are kept as is. E.g.
+// "src/v4/v4_7.2.2.2.algo_b/cmd/main.cc" becomes "src/v4/v4./cmd/main.cc".
+func shortPath(path string) string {
+	parts := strings.Split(filepath.ToSlash(path), "/")
+	for i := 0; i < len(parts)-1; i++ {
+		if r := []rune(parts[i]); len(r) > 3 {
+			parts[i] = string(r[:2]) + "."
+		}
+	}
+	return strings.Join(parts, "/")
 }
 
 // groupKey identifies a (base name, version tag) tuple that is expected to
