@@ -261,16 +261,20 @@ Bench::get( ID id ) -> Bench
     TAOCP_EVAL_PANIC( "unknown bench id %d", static_cast<int>( id ) );
 }
 
-/// Prints the bench info `info` to stdout.
+/// Prints the info of `bench` to stdout, plus its number of clauses and its
+/// table size (the total number of literals in `bench->clauses`).
 inline auto
-printBenchInfo( const BenchInfo *info ) -> void
+printBenchInfo( const Bench *bench ) -> void
 {
+    const BenchInfo *info = &bench->info;
     ::printf( "BenchInfo {\n" );
     ::printf( "    vol: \"%s\",\n", info->vol );
     ::printf( "    page: \"%s\",\n", info->page );
     ::printf( "    eqn: \"%s\",\n", info->eqn );
     ::printf( "    name: \"%s\",\n", info->name );
     ::printf( "    num_vars: %zu,\n", info->num_vars );
+    ::printf( "    num_clauses: %zu,\n", bench->segments.size( ) );
+    ::printf( "    table_size: %zu,\n", bench->clauses.size( ) );
     ::printf( "}\n" );
 }
 

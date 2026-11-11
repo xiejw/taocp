@@ -1,21 +1,25 @@
 // forge:skip
 //
-// main — prints the info of a SAT benchmark problem.
+// main — prints the info of every SAT benchmark problem.
 //
 // Usage:
 //   main
 //
-// Takes no arguments. Builds the waerden(3,3;9) benchmark (TAOCP Vol 4B, Page
-// 188, Eq 9) and prints its BenchInfo to stdout.
+// Takes no arguments. Builds each benchmark returned by `getAllIDs()` and
+// prints its BenchInfo to stdout. Set `TAOCP_SAT_EVAL_ID` to print only the
+// benchmark with that 0-based index (see `getAllIDs()` in `sat/eval.h`).
 #include "sat/eval.h"
 
 using taocp::sat::eval::Bench;
-using taocp::sat::eval::ID;
+using taocp::sat::eval::getAllIDs;
+using taocp::sat::eval::printBenchInfo;
 
 int
 main( )
 {
-    auto bench = Bench::get( ID::Waerden339 );
-    taocp::sat::eval::printBenchInfo( &bench.info );
+    for ( auto id : getAllIDs( ) ) {
+        auto bench = Bench::get( id );
+        printBenchInfo( &bench );
+    }
     return 0;
 }

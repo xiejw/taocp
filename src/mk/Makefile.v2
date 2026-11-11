@@ -64,6 +64,8 @@ endif
 
 # === --- Actions----------------------------------------------------------- ===
 
+.DEFAULT_GOAL := run
+
 test: test_title
 
 test_title:

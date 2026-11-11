@@ -102,7 +102,7 @@ runAll( Delegator *d ) -> void
         ::printf( "%s==== --- %s --- ===%s\n", kColorGreen, d->name( ),
                   kColorReset );
         auto bench = Bench::get( id );
-        printBenchInfo( &bench.info );
+        printBenchInfo( &bench );
 
         Timer timer;
 

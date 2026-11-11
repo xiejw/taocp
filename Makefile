@@ -40,9 +40,7 @@ fmt:
 	make --no-print-directory -C tools fmt
 
 clean:
-	@set -e; for m in $(MODS); do                             \
-		make --no-print-directory -C $$m clean;           \
-		done
+	go run ~/Workspace/y/tools/scripts/delete_unused_dirs.go
 
 release:
 	@set -e; for m in $(MODS); do                             \
