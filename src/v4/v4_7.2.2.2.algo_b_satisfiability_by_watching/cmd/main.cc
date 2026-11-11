@@ -1,18 +1,17 @@
 // forge:skip
-#include <string.h>
-
+#include <optional>
+#include <utility>
 #include <vector>
 
-#include "sat/eval.h"
-#include "sat/timer.h"
+#include "sat/eval_runner.h"
 
-#include "log.h"
 #include "sat_literal.h"
 #include "sat_watch.h"
 
 using taocp::complement;
+using taocp::decodeVariable;
+using taocp::isLiteralComplement;
 using taocp::Literal;
-using taocp::printClause;
 using taocp::WatchSolver;
 
 namespace eval = taocp::sat::eval;
@@ -27,55 +26,55 @@ toSolverLiteral( eval::Literal lit ) -> Literal
     return pos ? var : complement( var );
 }
 
-/// Emits every clause of `bench` into `solver`, printing each one.
+/// Translates the solver literal `lit` back into an eval literal.
 auto
-emitBench( WatchSolver *solver, const eval::Bench *bench ) -> void
+toEvalLiteral( Literal lit ) -> eval::Literal
 {
-    std::vector<Literal> lits;
-    for ( auto &seg : bench->segments ) {
-        lits.clear( );
-        for ( size_t i = seg.begin; i < seg.end; i++ ) {
-            lits.push_back( toSolverLiteral( bench->clauses[i] ) );
+    auto var = static_cast<ssize_t>( decodeVariable( lit ) );
+    return isLiteralComplement( lit ) ? eval::Literal::newNeg( var )
+                                      : eval::Literal::newPos( var );
+}
+
+struct WatchDelegator : eval::Delegator {
+    auto name( ) const -> const char * override
+    {
+        return "Algorithm B: Satisfiability by Watching";
+    }
+
+    auto onInit( const eval::Bench *bench ) -> void override
+    {
+        solver.emplace( /*num_vars=*/bench->info.num_vars,
+                        /*num_clauses=*/bench->segments.size( ) );
+        std::vector<Literal> lits;
+        for ( auto &seg : bench->segments ) {
+            lits.clear( );
+            for ( size_t i = seg.begin; i < seg.end; i++ )
+                lits.push_back( toSolverLiteral( bench->clauses[i] ) );
+            solver->emitClause( lits.size( ), lits.data( ) );
         }
-        // printClause( lits.size( ), lits.data( ) );
-        solver->emitClause( lits.size( ), lits.data( ) );
     }
-}
 
-auto
-runSolver( eval::ID id ) -> void
-{
-    INFO( "==== --- Algorithm B: Satisfiability by Watching --- ===" );
-    auto bench = eval::Bench::get( id );
-    eval::printBenchInfo( &bench.info );
+    auto onSearchOneSolution( ) -> eval::Solution override
+    {
+        auto res = solver->searchOneSolution( );
+        if ( !res ) return { /*solution_opt=*/std::nullopt };
 
-    WatchSolver solver{ /*num_vars=*/bench.info.num_vars,
-                        /*num_clauses=*/bench.segments.size( ) };
-
-    taocp::sat::Timer timer;
-
-    INFO( "Emit Clauses:" );
-    timer.start( );
-    emitBench( &solver, &bench );
-    timer.stopAndReport( "emitBench" );
-
-    timer.start( );
-    auto res = solver.searchOneSolution( );
-    timer.stopAndReport( "searchOneSolution" );
-
-    if ( res ) {
-        INFO( "Satisfiable!!!" );
-        INFO( "Result:" );
-        printClause( res.value( ).size( ), res.value( ).data( ) );
-    } else {
-        INFO( "Unsatisfiable" );
+        std::vector<eval::Literal> lits;
+        lits.reserve( res->size( ) );
+        for ( auto lit : *res ) lits.push_back( toEvalLiteral( lit ) );
+        return { /*solution_opt=*/std::move( lits ) };
     }
-}
+
+  private:
+    std::optional<WatchSolver> solver;
+};
+
 }  // namespace
 
 int
 main( )
 {
-    for ( auto id : eval::getAllIDs( ) ) runSolver( id );
+    WatchDelegator d;
+    eval::runAll( &d );
     return 0;
 }

@@ -53,7 +53,7 @@ struct Timer {
     auto stopAndReport( std::string_view msg ) -> void
     {
         uint64_t elapsed_ns = nowNs( ) - start_ns;
-        ::printf( "time spent on `%s%.*s%s`: %.3f ms\n", kColorPink,
+        ::printf( "Time spent on `%s%.*s%s`: %.3f ms\n", kColorPink,
                   static_cast<int>( msg.size( ) ), msg.data( ), kColorReset,
                   static_cast<double>( elapsed_ns ) / 1e6 );
     }
