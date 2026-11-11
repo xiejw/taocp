@@ -1,5 +1,5 @@
 // forge:skip
-#include "eval.h"
+#include "sat/eval.h"
 
 #include "test_macros.h"
 

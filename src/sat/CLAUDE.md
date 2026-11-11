@@ -1,6 +1,6 @@
 # CLAUDE.md — src/sat
 
-## `src/eval.h` is a self-contained, header-only module
+## `include/sat/eval.h` is a self-contained, header-only module
 
 - `eval.h` must stay **header-only**: there is no `eval.cc`, and none should be
   added. All functions are defined in the header (`inline`, or in-class).

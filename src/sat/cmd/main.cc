@@ -7,7 +7,7 @@
 //
 // Takes no arguments. Builds the waerden(3,3;9) benchmark (TAOCP Vol 4B, Page
 // 188, Eq 9) and prints its BenchInfo to stdout.
-#include "eval.h"
+#include "sat/eval.h"
 
 using taocp::sat::eval::Bench;
 using taocp::sat::eval::ID;

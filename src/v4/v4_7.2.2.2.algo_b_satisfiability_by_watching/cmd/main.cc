@@ -3,8 +3,9 @@
 
 #include <vector>
 
-#include "../../../sat/src/eval.h"
-#include "../../../sat/src/timer.h"
+#include "sat/eval.h"
+#include "sat/timer.h"
+
 #include "log.h"
 #include "sat_literal.h"
 #include "sat_watch.h"

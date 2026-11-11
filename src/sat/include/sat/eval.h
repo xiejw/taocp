@@ -95,7 +95,7 @@ class Literal {
     /// `k` for x_k and `-k` for ¬x_k.
     ssize_t v;
 
-    explicit Literal( ssize_t v ) : v{ v } { }
+    explicit Literal( ssize_t v ) : v{ v } {}
 };
 
 // === --- Bench and ID ---------------------------------------------------- ===
@@ -126,15 +126,17 @@ getAllIDs( ) -> std::vector<ID>
         long  idx = ::strtol( env, &end, 10 );
         if ( *env == '\0' || *end != '\0' || idx < 0 ||
              static_cast<size_t>( idx ) >= kNumIDs ) {
-            TAOCP_EVAL_PANIC( "TAOCP_SAT_EVAL_ID must be in [0, %zu), got \"%s\"",
-                              kNumIDs, env );
+            TAOCP_EVAL_PANIC(
+                "TAOCP_SAT_EVAL_ID must be in [0, %zu), got \"%s\"", kNumIDs,
+                env );
         }
         return { static_cast<ID>( idx ) };
     }
 
     std::vector<ID> ids;
     ids.reserve( kNumIDs );
-    for ( size_t i = 0; i < kNumIDs; i++ ) ids.push_back( static_cast<ID>( i ) );
+    for ( size_t i = 0; i < kNumIDs; i++ )
+        ids.push_back( static_cast<ID>( i ) );
     return ids;
 }
 
@@ -173,7 +175,7 @@ fromClauses( const BenchInfo                                             *info,
              const std::initializer_list<std::initializer_list<ssize_t>> *cs )
     -> Bench
 {
-    Bench b{ *info, { }, {} };
+    Bench b{ *info, { }, { } };
     b.segments.reserve( cs->size( ) );
     for ( auto &c : *cs ) {
         size_t begin = b.clauses.size( );
@@ -204,7 +206,7 @@ waerden33( const BenchInfo *info ) -> Bench
     // - 2 is due to poss and negs.
     // - 3 is due to the number of literals in each ap
     //
-    Bench b{ *info, { }, {} };
+    Bench b{ *info, { }, { } };
     b.clauses.reserve( 2 * 3 * aps.size( ) );
     b.segments.reserve( 2 * aps.size( ) );
     for ( auto new_lit : { Literal::newPos, Literal::newNeg } ) {

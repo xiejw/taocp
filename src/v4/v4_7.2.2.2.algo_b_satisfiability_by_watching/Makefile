@@ -8,6 +8,8 @@ TEST_OUT = test_main
 
 include mk.tpl
 
+CXXFLAGS += -I../../sat/include
+
 CXXFLAGS += -Wno-unused-label
 
 # Main is in `make test`
