@@ -1,5 +1,5 @@
 // forge:v1
-#include "sat_watch.h"
+#include "sat_backtrack.h"
 
 #include <stdio.h>
 
@@ -27,38 +27,38 @@ debugCheck( size_t num_vars, size_t size, const Literal *lits ) -> void
 }
 }  // namespace
 
-WatchSolver::WatchSolver( size_t num_vars, size_t num_clauses,
+BacktrackSolver::BacktrackSolver( size_t num_vars, size_t num_clauses,
                           size_t num_reserved_cells )
     : num_vars_( num_vars ),
       num_clauses_( num_clauses ),
       num_emitted_clauses_( 0 ),
       start_( 1 + num_clauses ),
-      watch_( 2 + 2 * num_vars ),
+      backtrack_( 2 + 2 * num_vars ),
       link_( 1 + num_clauses )
 {
     cells_.reserve( 1 + num_reserved_cells );
     cells_.push_back( 0 );
 }
 
-WatchSolver::WatchSolver( size_t num_vars, size_t num_clauses )
-    : WatchSolver( num_vars, num_clauses, /*a guess*/ 5 * num_clauses )
+BacktrackSolver::BacktrackSolver( size_t num_vars, size_t num_clauses )
+    : BacktrackSolver( num_vars, num_clauses, /*a guess*/ 5 * num_clauses )
 {
 }
 
 auto
-WatchSolver::reserveCells( size_t num_cells ) -> void
+BacktrackSolver::reserveCells( size_t num_cells ) -> void
 {
     cells_.reserve( 1 + num_cells );
 }
 
 auto
-WatchSolver::emitClause( std::initializer_list<Literal> lits ) -> void
+BacktrackSolver::emitClause( std::initializer_list<Literal> lits ) -> void
 {
     this->emitClause( lits.size( ), std::data( lits ) );
 }
 
 auto
-WatchSolver::emitClause( size_t size, const Literal *lits ) -> void
+BacktrackSolver::emitClause( size_t size, const Literal *lits ) -> void
 {
     /* === --- Few quick sanity checks. ----------------------------- === */
     if ( size == 0 ) PANIC( "emitted clause cannot be empty." );
@@ -75,18 +75,15 @@ WatchSolver::emitClause( size_t size, const Literal *lits ) -> void
     for ( size_t x = 0; x < size; x++ ) {
         auto lit = lits[x];
 
-        /* For literal 'l', the value put into the cell is 2*l+C(l).
-         */
-        auto var           = decodeVariable( lit );
-        auto is_complement = isLiteralComplement( lit );
-        auto encoded_lit   = var * 2 + ( is_complement ? 1 : 0 );
+        /* Literal is already encoded as 2x or 2x+1 (see sat_literal.h). */
+        auto encoded_lit = lit;
         cells_.push_back( encoded_lit );
 
         if ( !is_first ) continue;
 
         /* === --- Special block to handle the first literal. ------ ===
          *
-         * Start, Watch, Link should be recorded correctly.
+         * Start, Backtrack, Link should be recorded correctly.
          */
         is_first = false;
 
@@ -94,13 +91,13 @@ WatchSolver::emitClause( size_t size, const Literal *lits ) -> void
         auto pos          = cells_.size( );
         start_[clause_id] = pos - 1;
 
-        /* Update the watch list. */
-        if ( watch_[encoded_lit] == 0 ) {
+        /* Update the backtrack list. */
+        if ( backtrack_[encoded_lit] == 0 ) {
             // This branch seems is identical to next.
-            watch_[encoded_lit] = clause_id;
+            backtrack_[encoded_lit] = clause_id;
         } else {
-            link_[clause_id]    = watch_[encoded_lit];
-            watch_[encoded_lit] = clause_id;
+            link_[clause_id]    = backtrack_[encoded_lit];
+            backtrack_[encoded_lit] = clause_id;
         }
     }
 
@@ -114,7 +111,7 @@ WatchSolver::emitClause( size_t size, const Literal *lits ) -> void
 }
 
 auto
-WatchSolver::searchOneSolution( ) -> std::optional<std::vector<Literal>>
+BacktrackSolver::searchOneSolution( ) -> std::optional<std::vector<Literal>>
 {
     if ( num_emitted_clauses_ != num_clauses_ ) {
         PANIC( "emitted clauses are not enough. expected {}, got {}",
@@ -130,13 +127,13 @@ B1:  // Init
 
 B2:  // Rejoice or choose
     while ( d <= n ) {
-        m[d] = watch_[2 * d] == 0 || watch_[2 * d + 1] != 0;
+        m[d] = backtrack_[2 * d] == 0 || backtrack_[2 * d + 1] != 0;
         // size_t l      = 2 * d + m[d];
         size_t comp_l = 2 * d + ( m[d] ^ 1 );
 
     B3:
         /* B3 Remove C(l) if possible. Page 573. Ex 124 */
-        size_t j = watch_[comp_l];
+        size_t j = backtrack_[comp_l];
 
         if ( kDebugMode )
             INFO(
@@ -144,7 +141,7 @@ B2:  // Rejoice or choose
                 "literal with starting clause %zu (comp l = %zu)",
                 d, j, comp_l );
 
-        // j tracks the current clause watching the comp_l
+        // j tracks the current clause backtracking the comp_l
         while ( j != 0 ) {
             if ( kDebugMode ) {
                 INFO(
@@ -152,7 +149,7 @@ B2:  // Rejoice or choose
                     "%zu",
                     j );
             }
-            /* A literal other than comp_l should be watched in
+            /* A literal other than comp_l should be backtracked in
              * clause j. */
 
             size_t begin  = start_[j];
@@ -182,19 +179,19 @@ B2:  // Rejoice or choose
                      ( ( new_l + m[new_l >> 1] ) % 2 ) == 0 ) {
                     cells_[begin] = new_l;
                     cells_[k]     = comp_l;
-                    link_[j]      = watch_[new_l];
-                    watch_[new_l] = j;
+                    link_[j]      = backtrack_[new_l];
+                    backtrack_[new_l] = j;
                     j             = next_j;
                     break; /* This clause is done. */
                 }
             }
 
             if ( k == end ) {
-                /* Cannot stop watching on comp_l. */
-                watch_[comp_l] = j;
+                /* Cannot stop backtracking on comp_l. */
+                backtrack_[comp_l] = j;
                 if ( kDebugMode )
                     INFO(
-                        "cannot stop watching on "
+                        "cannot stop backtracking on "
                         "complement of literal, go to B5 "
                         "at level d %d",
                         (int)d );
@@ -203,7 +200,7 @@ B2:  // Rejoice or choose
         }
 
     B4:  // Advance
-        watch_[comp_l] = 0;
+        backtrack_[comp_l] = 0;
         d++;
         if ( kDebugMode ) INFO( "advance to with B2 at level d %zu", d );
         continue; /* Return to B2 */
@@ -241,9 +238,9 @@ B2:  // Rejoice or choose
 
     for ( size_t i = 1; i <= num_vars_; i++ ) {
         if ( m[i] & 1 ) {
-            result[i - 1] = complement( i );
+            result[i - 1] = complement( literal( i ) );
         } else {
-            result[i - 1] = i;
+            result[i - 1] = literal( i );
         }
     }
 

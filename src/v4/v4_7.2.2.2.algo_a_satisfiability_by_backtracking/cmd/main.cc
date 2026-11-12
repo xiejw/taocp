@@ -6,13 +6,14 @@
 #include "sat/eval_runner.h"
 
 #include "sat_literal.h"
-#include "sat_watch.h"
+#include "sat_backtrack.h"
 
 using taocp::complement;
 using taocp::decodeVariable;
 using taocp::isLiteralComplement;
+using taocp::literal;
 using taocp::Literal;
-using taocp::WatchSolver;
+using taocp::BacktrackSolver;
 
 namespace eval = taocp::sat::eval;
 
@@ -23,7 +24,7 @@ auto
 toSolverLiteral( eval::Literal lit ) -> Literal
 {
     auto [var, pos] = lit.getVarAndSign( );
-    return pos ? var : complement( var );
+    return pos ? literal( var ) : complement( literal( var ) );
 }
 
 /// Translates the solver literal `lit` back into an eval literal.
@@ -35,10 +36,10 @@ toEvalLiteral( Literal lit ) -> eval::Literal
                                       : eval::Literal::newPos( var );
 }
 
-struct WatchDelegator : eval::Delegator {
+struct BacktrackDelegator : eval::Delegator {
     auto name( ) const -> const char * override
     {
-        return "Algorithm B: Satisfiability by Watching";
+        return "Algorithm B: Satisfiability by Backtracking";
     }
 
     auto onInit( const eval::Bench *bench ) -> void override
@@ -66,7 +67,7 @@ struct WatchDelegator : eval::Delegator {
     }
 
   private:
-    std::optional<WatchSolver> solver;
+    std::optional<BacktrackSolver> solver;
 };
 
 }  // namespace
@@ -74,7 +75,7 @@ struct WatchDelegator : eval::Delegator {
 int
 main( )
 {
-    WatchDelegator d;
+    BacktrackDelegator d;
     eval::runAll( &d );
     return 0;
 }

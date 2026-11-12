@@ -1,9 +1,9 @@
 // vim: ft=cpp
 // forge:v1
 //
-// Algorithm B: Satisfiability by Watching. Vol 4B Page 215.
-#ifndef TAOCP_SRC_SAT_WATCH_H_
-#define TAOCP_SRC_SAT_WATCH_H_
+// Algorithm B: Satisfiability by Backtracking. Vol 4B Page 215.
+#ifndef TAOCP_SRC_SAT_BACKTRACK_H_
+#define TAOCP_SRC_SAT_BACKTRACK_H_
 
 #include <initializer_list>
 #include <optional>
@@ -13,7 +13,7 @@
 
 namespace taocp {
 
-class WatchSolver {
+class BacktrackSolver {
   private:
     size_t num_vars_;
     size_t num_clauses_;
@@ -24,7 +24,7 @@ class WatchSolver {
     /*
      * The start position for each clause in cells.  The clause is
      * reversely ordered. And each literal is reversely ordered in the
-     * clause. The watched literal is at the first position of the clause.
+     * clause. The backtracked literal is at the first position of the clause.
 
      *
      * Index by clause. 1-based.
@@ -32,15 +32,15 @@ class WatchSolver {
     std::vector<size_t> start_;
 
     /*
-     * The start pointer for the clause watching the literal. The watched
+     * The start pointer for the clause backtracking the literal. The backtracked
      * literal is at the first position of the clause.
      *
      * Index by literal. 1-based.
      */
-    std::vector<size_t> watch_;
+    std::vector<size_t> backtrack_;
 
     /*
-     * LINK(j) is the pointer to the next clause with the same watched
+     * LINK(j) is the pointer to the next clause with the same backtracked
      * literal or 0 if last such clause.
      *
      * Index by clause. 1-based.
@@ -54,9 +54,9 @@ class WatchSolver {
      * cannot be changed anymore. num_reserved_cells should be the best
      * guess for the application. It requires one more space for the
      * placeholder. */
-    WatchSolver( size_t num_vars, size_t num_clauses,
+    BacktrackSolver( size_t num_vars, size_t num_clauses,
                  size_t num_reserved_cells );
-    WatchSolver( size_t num_vars, size_t num_clauses );
+    BacktrackSolver( size_t num_vars, size_t num_clauses );
 
     auto reserveCells( size_t num_cells ) -> void;
 
@@ -68,4 +68,4 @@ class WatchSolver {
 };
 }  // namespace taocp
 
-#endif  // TAOCP_SRC_SAT_WATCH_H_
+#endif  // TAOCP_SRC_SAT_BACKTRACK_H_
