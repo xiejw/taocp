@@ -56,6 +56,11 @@ panic( const char *file, int line, const char *fmt, ... ) -> void
 /// A literal: either x_k or ¬x_k, with k >= 1. The encoding is private; build
 /// one with `newPos`, `newNeg` or `fromDimacs` and inspect it with
 /// `getVarAndSign`.
+///
+/// The encoding favors readability over efficiency: it exists only to describe
+/// benchmark problems. Real solver algorithms should convert to a better
+/// encoding (e.g., TAOCP's 2k / 2k+1 scheme for x_k / ¬x_k) instead of using
+/// this one directly.
 class Literal {
   public:
     /// Returns the positive literal x_v. Panics unless `v` is positive.
