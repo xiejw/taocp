@@ -8,7 +8,7 @@
 //   TAOCP_SAT_EVAL_ID  If set, `getAllIDs()` returns only the benchmark at
 //                      this 0-based index in `enum class ID` (declaration
 //                      order), instead of all of them. For example,
-//                      `TAOCP_SAT_EVAL_ID=1 ./.build/main` runs only
+//                      `TAOCP_SAT_EVAL_ID=2 ./.build/main` runs only
 //                      waerden(3,3;9). Panics if the value is not an integer
 //                      in [0, kNumIDs).
 #pragma once
@@ -110,6 +110,7 @@ class Literal {
 /// sentinel holding the number of IDs and is not a valid benchmark.
 enum class ID {
     Rivest,
+    Rivest7,
     Waerden339,
     Count,
 };
@@ -121,7 +122,7 @@ inline constexpr size_t kNumIDs = static_cast<size_t>( ID::Count );
 ///
 /// If the environment variable `TAOCP_SAT_EVAL_ID` is set, returns only the ID
 /// whose index (0-based, in declaration order) it names, e.g.
-/// `TAOCP_SAT_EVAL_ID=1` for `ID::Waerden339`. Panics if the value is not an
+/// `TAOCP_SAT_EVAL_ID=2` for `ID::Waerden339`. Panics if the value is not an
 /// integer in `[0, kNumIDs)`.
 inline auto
 getAllIDs( ) -> std::vector<ID>
@@ -247,6 +248,26 @@ Bench::get( ID id ) -> Bench
             {-2, -3,  4},
             {-3, -4, -1},
             {-4,  1, -2},
+        };
+        return detail::fromClauses( &info, &cs );
+    }
+    case ID::Rivest7: {
+        // Rivest's clauses (6) without the last one, (¬x_4 x_1 ¬x_2).
+        BenchInfo info{
+            /*vol=*/"4b",
+            /*page=*/"188",
+            /*eqn=*/"7",
+            /*name=*/"rivest7",
+            /*num_vars=*/4,
+        };
+        std::initializer_list<std::initializer_list<ssize_t>> cs{
+            { 1,  2, -3},
+            { 2,  3, -4},
+            { 3,  4,  1},
+            { 4, -1,  2},
+            {-1, -2,  3},
+            {-2, -3,  4},
+            {-3, -4, -1},
         };
         return detail::fromClauses( &info, &cs );
     }

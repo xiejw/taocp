@@ -77,6 +77,7 @@ dies( void ( *fn )( ) ) -> bool
 FORGE_TEST( get_returns_num_vars )
 {
     EXPECT_TRUE( Bench::get( ID::Rivest ).info.num_vars == 4, "rivest" );
+    EXPECT_TRUE( Bench::get( ID::Rivest7 ).info.num_vars == 4, "rivest7" );
     EXPECT_TRUE( Bench::get( ID::Waerden339 ).info.num_vars == 9, "waerden" );
     return NULL;
 }
@@ -122,6 +123,9 @@ FORGE_TEST( clause_counts )
     auto r = Bench::get( ID::Rivest );
     EXPECT_TRUE( r.segments.size( ) == 8, "rivest segments" );
     EXPECT_TRUE( r.clauses.size( ) == 24, "rivest clauses" );
+    auto r7 = Bench::get( ID::Rivest7 );
+    EXPECT_TRUE( r7.segments.size( ) == 7, "rivest7 segments" );
+    EXPECT_TRUE( r7.clauses.size( ) == 21, "rivest7 clauses" );
     auto w = Bench::get( ID::Waerden339 );
     EXPECT_TRUE( w.segments.size( ) == 32, "waerden segments" );
     EXPECT_TRUE( w.clauses.size( ) == 96, "waerden clauses" );
@@ -130,7 +134,7 @@ FORGE_TEST( clause_counts )
 
 FORGE_TEST( segments_tile_clauses )
 {
-    for ( auto id : { ID::Rivest, ID::Waerden339 } ) {
+    for ( auto id : { ID::Rivest, ID::Rivest7, ID::Waerden339 } ) {
         auto   b   = Bench::get( id );
         size_t pos = 0;
         for ( auto &seg : b.segments ) {
@@ -143,6 +147,17 @@ FORGE_TEST( segments_tile_clauses )
     return NULL;
 }
 
+FORGE_TEST( rivest7_is_rivest_minus_last_clause )
+{
+    auto r  = Bench::get( ID::Rivest );
+    auto r7 = Bench::get( ID::Rivest7 );
+    EXPECT_TRUE( r7.segments.size( ) + 1 == r.segments.size( ), "one fewer" );
+    EXPECT_TRUE( r7.clauses.size( ) == r.segments.back( ).begin, "prefix" );
+    for ( size_t j = 0; j < r7.clauses.size( ); j++ )
+        EXPECT_TRUE( r7.clauses[j] == r.clauses[j], "same literal" );
+    return NULL;
+}
+
 FORGE_TEST( all_unsatisfiable )
 {
     auto rivest  = Bench::get( ID::Rivest );
@@ -152,10 +167,9 @@ FORGE_TEST( all_unsatisfiable )
     return NULL;
 }
 
-FORGE_TEST( rivest_minus_last_clause_is_satisfiable )
+FORGE_TEST( rivest7_is_satisfiable )
 {
-    auto r = Bench::get( ID::Rivest );
-    r.segments.pop_back( );
+    auto r = Bench::get( ID::Rivest7 );
     EXPECT_TRUE( satisfiable_by_brute_force( &r ), "satisfiable" );
     return NULL;
 }
