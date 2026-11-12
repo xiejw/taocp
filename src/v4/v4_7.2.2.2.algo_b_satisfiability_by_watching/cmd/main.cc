@@ -11,6 +11,7 @@
 using taocp::complement;
 using taocp::decodeVariable;
 using taocp::isLiteralComplement;
+using taocp::literal;
 using taocp::Literal;
 using taocp::WatchSolver;
 
@@ -23,7 +24,7 @@ auto
 toSolverLiteral( eval::Literal lit ) -> Literal
 {
     auto [var, pos] = lit.getVarAndSign( );
-    return pos ? var : complement( var );
+    return pos ? literal( var ) : complement( literal( var ) );
 }
 
 /// Translates the solver literal `lit` back into an eval literal.

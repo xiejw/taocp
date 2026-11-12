@@ -75,11 +75,8 @@ WatchSolver::emitClause( size_t size, const Literal *lits ) -> void
     for ( size_t x = 0; x < size; x++ ) {
         auto lit = lits[x];
 
-        /* For literal 'l', the value put into the cell is 2*l+C(l).
-         */
-        auto var           = decodeVariable( lit );
-        auto is_complement = isLiteralComplement( lit );
-        auto encoded_lit   = var * 2 + ( is_complement ? 1 : 0 );
+        /* Literal is already encoded as 2x or 2x+1 (see sat_literal.h). */
+        auto encoded_lit = lit;
         cells_.push_back( encoded_lit );
 
         if ( !is_first ) continue;
@@ -241,9 +238,9 @@ B2:  // Rejoice or choose
 
     for ( size_t i = 1; i <= num_vars_; i++ ) {
         if ( m[i] & 1 ) {
-            result[i - 1] = complement( i );
+            result[i - 1] = complement( literal( i ) );
         } else {
-            result[i - 1] = i;
+            result[i - 1] = literal( i );
         }
     }
 

@@ -1,29 +1,32 @@
-// forge:v1
+// forge:skip
 #include "sat_literal.h"
 
 #include <stdio.h>
 
 namespace taocp {
-namespace {
-constexpr Literal kMask = Literal{ 1 } << ( 8 * sizeof( Literal ) - 1 );
+
+auto
+literal( size_t var ) -> Literal
+{
+    return 2 * var;
 }
 
 auto
 complement( Literal lit ) -> Literal
 {
-    return lit | kMask;
+    return lit ^ 1;
 }
 
 auto
-decodeVariable( Literal lit ) -> Literal
+decodeVariable( Literal lit ) -> size_t
 {
-    return lit & ( ~kMask );
+    return lit >> 1;
 }
 
 auto
 isLiteralComplement( Literal lit ) -> bool
 {
-    return lit & kMask;
+    return lit & 1;
 }
 
 auto
@@ -38,9 +41,9 @@ printClause( size_t size, const Literal *lits ) -> void
     for ( size_t x = 0; x < size; x++ ) {
         auto i = lits[x];
         if ( isLiteralComplement( i ) )
-            printf( "C(%3" PRI_LITERAL "), ", decodeVariable( i ) );
+            printf( "¬%3zu, ", decodeVariable( i ) );
         else
-            printf( "%3" PRI_LITERAL ", ", i );
+            printf( "%3zu, ", decodeVariable( i ) );
     }
     printf( " >\n" );
 }
