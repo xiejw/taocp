@@ -24,7 +24,9 @@
 // Every scanned file is reported, one line to stdout, in fixed-width
 // columns (shortened path padded to the longest one, base name padded to
 // 20 chars, tag padded to 6 chars, then the checksum) so that output lines
-// up for easy scanning/diffing:
+// up for easy scanning/diffing. Checksums are printed abbreviated as their
+// first 4 hex chars, "...", then their last 4 hex chars (e.g. "1a2b...9f0e"),
+// both here and in the stderr mismatch listing:
 //
 //	<short path>  <base name (20)>  <tag (6)>  <checksum>
 //
@@ -113,7 +115,7 @@ func main() {
 
 	var missing []string
 	for _, r := range results {
-		fmt.Printf("%-*s  %-20s  %-6s  %s\n", pathWidth, shortPath(r.fullPath), r.baseName, r.tag, r.checksum)
+		fmt.Printf("%-*s  %-20s  %-6s  %s\n", pathWidth, shortPath(r.fullPath), r.baseName, r.tag, shortChecksum(r.checksum))
 		if r.tag == noTag {
 			missing = append(missing, r.fullPath)
 		}
@@ -138,7 +140,7 @@ func main() {
 		for _, g := range mismatches {
 			fmt.Fprintf(os.Stderr, "  %s %s\n", g.baseName, g.tag)
 			for _, r := range g.entries {
-				fmt.Fprintf(os.Stderr, "    %s  %s\n", r.checksum, r.fullPath)
+				fmt.Fprintf(os.Stderr, "    %s  %s\n", shortChecksum(r.checksum), r.fullPath)
 			}
 		}
 	}
@@ -158,6 +160,16 @@ func shortPath(path string) string {
 		}
 	}
 	return strings.Join(parts, "/")
+}
+
+// shortChecksum abbreviates a hex checksum to its first 4 chars, "...", and
+// its last 4 chars (e.g. "1a2b...9f0e"). Checksums of 11 chars or fewer
+// (including the empty checksum of "skip" files) are returned unchanged.
+func shortChecksum(sum string) string {
+	if len(sum) <= 11 {
+		return sum
+	}
+	return sum[:4] + "..." + sum[len(sum)-4:]
 }
 
 // groupKey identifies a (base name, version tag) tuple that is expected to
