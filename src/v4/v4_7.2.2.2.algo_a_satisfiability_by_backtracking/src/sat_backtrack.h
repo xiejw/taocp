@@ -1,11 +1,10 @@
 // vim: ft=cpp
 // forge:v1
 //
-// Algorithm B: Satisfiability by Backtracking. Vol 4B Page 215.
+// Algorithm A: Satisfiability by Backtracking. Vol 4B Page 212.
 #ifndef TAOCP_SRC_SAT_BACKTRACK_H_
 #define TAOCP_SRC_SAT_BACKTRACK_H_
 
-#include <initializer_list>
 #include <optional>
 #include <vector>
 
@@ -13,57 +12,46 @@
 
 namespace taocp {
 
+/// Clause j is `clauses[begin, end)` where `{begin, end} = segments[j]`.
+struct Segment {
+    size_t begin;
+    size_t end;
+};
+
 class BacktrackSolver {
   private:
     size_t num_vars_;
     size_t num_clauses_;
-    size_t num_emitted_clauses_;
 
-    std::vector<size_t> cells_; /* Index by cell. */
+    std::vector<size_t> l_; /* Index by cell. Starting with 2. */
+    std::vector<size_t> f_; /* Index by cell. Starting with 2. */
+    std::vector<size_t> b_; /* Index by cell. Starting with 2. */
+    std::vector<size_t> c_; /* Index by cell. Starting with 2. */
 
     /*
      * The start position for each clause in cells.  The clause is
      * reversely ordered. And each literal is reversely ordered in the
-     * clause. The backtracked literal is at the first position of the clause.
-
+     * clause.
+     *
+     * The size of each clause in cells.
      *
      * Index by clause. 1-based.
      */
     std::vector<size_t> start_;
-
-    /*
-     * The start pointer for the clause backtracking the literal. The backtracked
-     * literal is at the first position of the clause.
-     *
-     * Index by literal. 1-based.
-     */
-    std::vector<size_t> backtrack_;
-
-    /*
-     * LINK(j) is the pointer to the next clause with the same backtracked
-     * literal or 0 if last such clause.
-     *
-     * Index by clause. 1-based.
-     */
-    std::vector<size_t> link_;
+    std::vector<size_t> size_;
 
   public:
     /* === --- Constructors ----------------------------------------- === */
 
-    /* For all constructors, num_vars and num_clauses are fixed and
-     * cannot be changed anymore. num_reserved_cells should be the best
-     * guess for the application. It requires one more space for the
-     * placeholder. */
-    BacktrackSolver( size_t num_vars, size_t num_clauses,
-                 size_t num_reserved_cells );
-    BacktrackSolver( size_t num_vars, size_t num_clauses );
-
-    auto reserveCells( size_t num_cells ) -> void;
+    /* All clauses are given at once, laid out like `eval::Bench`: clause j
+     * is `(*clauses)[begin, end)` where `{begin, end} = (*segments)[j]`.
+     * Variables are 1-based in [1, num_vars]. The solver copies what it
+     * needs; it does not keep the pointers. */
+    BacktrackSolver( size_t num_vars, const std::vector<Literal> *clauses,
+                     const std::vector<Segment> *segments );
 
   public:
-    /* === --- Clauses and Search ---------------------------------- === */
-    void emitClause( size_t size, const Literal *lits );
-    void emitClause( std::initializer_list<Literal> lits );
+    /* === --- Search ---------------------------------------------- === */
     auto searchOneSolution( ) -> std::optional<std::vector<Literal>>;
 };
 }  // namespace taocp

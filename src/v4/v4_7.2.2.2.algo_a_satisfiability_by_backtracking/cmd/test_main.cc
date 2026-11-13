@@ -1,11 +1,37 @@
 // forge:skip
-#include "sat_literal.h"
 #include "sat_backtrack.h"
+#include "sat_literal.h"
 #include "test_macros.h"
 
-using taocp::complement;
-using taocp::literal;
 using taocp::BacktrackSolver;
+using taocp::complement;
+using taocp::Literal;
+using taocp::literal;
+using taocp::Segment;
+
+namespace {
+
+/// All clauses of a test problem, laid out like `eval::Bench`.
+struct Table {
+    std::vector<Literal> clauses;
+    std::vector<Segment> segments;
+};
+
+/// Builds a `Table` from `cs`, one inner list per clause.
+auto
+makeTable( const std::initializer_list<std::initializer_list<Literal>> *cs )
+    -> Table
+{
+    Table t;
+    for ( auto &c : *cs ) {
+        size_t begin = t.clauses.size( );
+        for ( auto lit : c ) t.clauses.push_back( lit );
+        t.segments.push_back( { begin, t.clauses.size( ) } );
+    }
+    return t;
+}
+
+}  // namespace
 
 FORGE_TEST( depResolution )
 {
@@ -33,68 +59,69 @@ FORGE_TEST( depResolution )
      * 15 stdlib:3
      * 16 stdlib:4*
      */
-    BacktrackSolver solver{ /*num_vars=*/16,
-                        /*num_clauses=*/3 * 2 + 10 * 2 + 16 };
-
     // clang-format off
+    std::initializer_list<std::initializer_list<Literal>> cs{
         /* === --- Consistency ------------------------------------------ ===
          */
-        solver.emitClause(  { complement( literal( 1 ) ) , complement( literal( 2 ) )  } );
-        solver.emitClause(  { complement( literal( 1 ) ) , complement( literal( 3 ) )  } );
-        solver.emitClause(  { complement( literal( 2 ) ) , complement( literal( 3 ) )  } );
+        { complement( literal( 1 ) ) , complement( literal( 2 ) )  },
+        { complement( literal( 1 ) ) , complement( literal( 3 ) )  },
+        { complement( literal( 2 ) ) , complement( literal( 3 ) )  },
 
-        solver.emitClause(  { complement( literal( 4 ) ) , complement( literal( 5 ) )  } );
-        solver.emitClause(  { complement( literal( 4 ) ) , complement( literal( 6 ) )  } );
-        solver.emitClause(  { complement( literal( 5 ) ) , complement( literal( 6 ) )  } );
+        { complement( literal( 4 ) ) , complement( literal( 5 ) )  },
+        { complement( literal( 4 ) ) , complement( literal( 6 ) )  },
+        { complement( literal( 5 ) ) , complement( literal( 6 ) )  },
 
-        solver.emitClause(  { complement( literal( 7 ) ) , complement( literal( 8 ) )  } );
-        solver.emitClause(  { complement( literal( 7 ) ) , complement( literal( 9 ) )  } );
-        solver.emitClause(  { complement( literal( 7 ) ) , complement( literal( 10 ) )  } );
-        solver.emitClause(  { complement( literal( 7 ) ) , complement( literal( 11 ) )  } );
-        solver.emitClause(  { complement( literal( 8 ) ) , complement( literal( 9 ) )  } );
-        solver.emitClause(  { complement( literal( 8 ) ) , complement( literal( 10 ) )  } );
-        solver.emitClause(  { complement( literal( 8 ) ) , complement( literal( 11 ) )  } );
-        solver.emitClause(  { complement( literal( 9 ) ) , complement( literal( 10 ) )  } );
-        solver.emitClause(  { complement( literal( 9 ) ) , complement( literal( 11 ) )  } );
-        solver.emitClause(  { complement( literal( 10 ) ) , complement( literal( 11 ) )  } );
+        { complement( literal( 7 ) ) , complement( literal( 8 ) )  },
+        { complement( literal( 7 ) ) , complement( literal( 9 ) )  },
+        { complement( literal( 7 ) ) , complement( literal( 10 ) )  },
+        { complement( literal( 7 ) ) , complement( literal( 11 ) )  },
+        { complement( literal( 8 ) ) , complement( literal( 9 ) )  },
+        { complement( literal( 8 ) ) , complement( literal( 10 ) )  },
+        { complement( literal( 8 ) ) , complement( literal( 11 ) )  },
+        { complement( literal( 9 ) ) , complement( literal( 10 ) )  },
+        { complement( literal( 9 ) ) , complement( literal( 11 ) )  },
+        { complement( literal( 10 ) ) , complement( literal( 11 ) )  },
 
-        solver.emitClause(  { complement( literal( 12 ) ) , complement( literal( 13 ) )  } );
-        solver.emitClause(  { complement( literal( 12 ) ) , complement( literal( 14 ) )  } );
-        solver.emitClause(  { complement( literal( 12 ) ) , complement( literal( 15 ) )  } );
-        solver.emitClause(  { complement( literal( 12 ) ) , complement( literal( 16 ) )  } );
-        solver.emitClause(  { complement( literal( 13 ) ) , complement( literal( 14 ) )  } );
-        solver.emitClause(  { complement( literal( 13 ) ) , complement( literal( 15 ) )  } );
-        solver.emitClause(  { complement( literal( 13 ) ) , complement( literal( 16 ) )  } );
-        solver.emitClause(  { complement( literal( 14 ) ) , complement( literal( 15 ) )  } );
-        solver.emitClause(  { complement( literal( 14 ) ) , complement( literal( 16 ) )  } );
-        solver.emitClause(  { complement( literal( 15 ) ) , complement( literal( 16 ) )  } );
+        { complement( literal( 12 ) ) , complement( literal( 13 ) )  },
+        { complement( literal( 12 ) ) , complement( literal( 14 ) )  },
+        { complement( literal( 12 ) ) , complement( literal( 15 ) )  },
+        { complement( literal( 12 ) ) , complement( literal( 16 ) )  },
+        { complement( literal( 13 ) ) , complement( literal( 14 ) )  },
+        { complement( literal( 13 ) ) , complement( literal( 15 ) )  },
+        { complement( literal( 13 ) ) , complement( literal( 16 ) )  },
+        { complement( literal( 14 ) ) , complement( literal( 15 ) )  },
+        { complement( literal( 14 ) ) , complement( literal( 16 ) )  },
+        { complement( literal( 15 ) ) , complement( literal( 16 ) )  },
 
         /* === --- Dependencies ----------------------------------------- ===
         */
-        solver.emitClause(  { complement( literal( 2 ) ), literal( 5 )  } );
-        solver.emitClause(  { complement( literal( 2 ) ), literal( 13 ), literal( 14 ), literal( 15 ), literal( 16 )  } );
+        { complement( literal( 2 ) ), literal( 5 )  },
+        { complement( literal( 2 ) ), literal( 13 ), literal( 14 ), literal( 15 ), literal( 16 )  },
 
-        solver.emitClause(  { complement( literal( 3 ) ), literal( 5 ), literal( 6 )  } );
-        solver.emitClause(  { complement( literal( 3 ) ), literal( 14 ), literal( 15 ), literal( 16 )  } );
+        { complement( literal( 3 ) ), literal( 5 ), literal( 6 )  },
+        { complement( literal( 3 ) ), literal( 14 ), literal( 15 ), literal( 16 )  },
 
-        solver.emitClause(  { complement( literal( 4 ) ), literal( 14 ), literal( 15 ), literal( 16 )  } );
-        solver.emitClause(  { complement( literal( 5 ) ), literal( 14 ), literal( 15 ), literal( 16 )  } );
-        solver.emitClause(  { complement( literal( 6 ) ), literal( 15 ), literal( 16 )  } );
+        { complement( literal( 4 ) ), literal( 14 ), literal( 15 ), literal( 16 )  },
+        { complement( literal( 5 ) ), literal( 14 ), literal( 15 ), literal( 16 )  },
+        { complement( literal( 6 ) ), literal( 15 ), literal( 16 )  },
 
-        solver.emitClause(  { complement( literal( 7 ) ), literal( 12 ), literal( 13 ), literal( 14 ), literal( 15 )  } );
-        solver.emitClause(  { complement( literal( 8 ) ), literal( 12 ), literal( 13 ), literal( 14 ), literal( 15 )  } );
-        solver.emitClause(  { complement( literal( 9 ) ), literal( 13 ), literal( 14 ), literal( 15 ), literal( 16 )  } );
-        solver.emitClause(  { complement( literal( 10 ) ), literal( 14 ), literal( 15 ), literal( 16 )  } );
-        solver.emitClause(  { complement( literal( 11 ) ), literal( 15 ), literal( 16 )  } );
+        { complement( literal( 7 ) ), literal( 12 ), literal( 13 ), literal( 14 ), literal( 15 )  },
+        { complement( literal( 8 ) ), literal( 12 ), literal( 13 ), literal( 14 ), literal( 15 )  },
+        { complement( literal( 9 ) ), literal( 13 ), literal( 14 ), literal( 15 ), literal( 16 )  },
+        { complement( literal( 10 ) ), literal( 14 ), literal( 15 ), literal( 16 )  },
+        { complement( literal( 11 ) ), literal( 15 ), literal( 16 )  },
 
         /* === --- Root  ------------------------------------------------ ===
         */
-        solver.emitClause(  { literal( 3 )  } );
-        solver.emitClause(  { literal( 6 )  } );
-        solver.emitClause(  { literal( 10 ), literal( 11 )  } );
-        solver.emitClause(  { literal( 16 )  } );
-
+        { literal( 3 )  },
+        { literal( 6 )  },
+        { literal( 10 ), literal( 11 )  },
+        { literal( 16 )  },
+    };
     // clang-format on
+    auto            table = makeTable( &cs );
+    BacktrackSolver solver{ /*num_vars=*/16, &table.clauses, &table.segments };
+
     auto res = solver.searchOneSolution( );
 
     EXPECT_TRUE( bool( res ) == true, "has answer" );
@@ -127,12 +154,14 @@ FORGE_TEST( simple )
      *
      * answer is 1 2 any 3
      */
-    BacktrackSolver solver{ /*num_vars=*/3, /*num_clauses=*/4 };
-
-    solver.emitClause( { literal( 1 ) } );
-    solver.emitClause( { literal( 1 ), complement( literal( 2 ) ) } );
-    solver.emitClause( { literal( 2 ), complement( literal( 3 ) ) } );
-    solver.emitClause( { literal( 2 ), literal( 3 ) } );
+    std::initializer_list<std::initializer_list<Literal>> cs{
+        { literal( 1 ) },
+        { literal( 1 ), complement( literal( 2 ) ) },
+        { literal( 2 ), complement( literal( 3 ) ) },
+        { literal( 2 ), literal( 3 ) },
+    };
+    auto            table = makeTable( &cs );
+    BacktrackSolver solver{ /*num_vars=*/3, &table.clauses, &table.segments };
 
     auto res = solver.searchOneSolution( );
 
@@ -154,13 +183,15 @@ FORGE_TEST( reverse )
      *
      * answer is c1 c2 3
      */
-    BacktrackSolver solver{ /*num_vars=*/3, /*num_clauses=*/5 };
-
-    solver.emitClause( { literal( 3 ) } );
-    solver.emitClause( { complement( literal( 2 ) ), literal( 1 ) } );
-    solver.emitClause( { literal( 3 ), literal( 2 ) } );
-    solver.emitClause( { complement( literal( 3 ) ), complement( literal( 1 ) ) } );
-    solver.emitClause( { literal( 3 ), complement( literal( 1 ) ) } );
+    std::initializer_list<std::initializer_list<Literal>> cs{
+        { literal( 3 ) },
+        { complement( literal( 2 ) ), literal( 1 ) },
+        { literal( 3 ), literal( 2 ) },
+        { complement( literal( 3 ) ), complement( literal( 1 ) ) },
+        { literal( 3 ), complement( literal( 1 ) ) },
+    };
+    auto            table = makeTable( &cs );
+    BacktrackSolver solver{ /*num_vars=*/3, &table.clauses, &table.segments };
 
     auto res = solver.searchOneSolution( );
 
@@ -181,12 +212,14 @@ FORGE_TEST( noResult )
      *
      * answer is: no solution.
      */
-    BacktrackSolver solver{ /*num_vars=*/3, /*num_clauses=*/4 };
-
-    solver.emitClause( { complement( literal( 1 ) ) } );
-    solver.emitClause( { literal( 1 ), complement( literal( 2 ) ) } );
-    solver.emitClause( { literal( 2 ), complement( literal( 3 ) ) } );
-    solver.emitClause( { literal( 2 ), literal( 3 ) } );
+    std::initializer_list<std::initializer_list<Literal>> cs{
+        { complement( literal( 1 ) ) },
+        { literal( 1 ), complement( literal( 2 ) ) },
+        { literal( 2 ), complement( literal( 3 ) ) },
+        { literal( 2 ), literal( 3 ) },
+    };
+    auto            table = makeTable( &cs );
+    BacktrackSolver solver{ /*num_vars=*/3, &table.clauses, &table.segments };
 
     auto res = solver.searchOneSolution( );
 
