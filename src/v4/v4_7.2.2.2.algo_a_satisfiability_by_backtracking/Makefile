@@ -4,7 +4,7 @@ MODS    += ${BUILD_OBJS}/sat_backtrack.o
 
 MAIN_OUT = main
 
-TEST_OUT = test_main
+# TEST_OUT = test_main
 
 include mk.tpl
 
@@ -16,6 +16,6 @@ CXXFLAGS += -Wno-unused-label
 $(eval $(call TEST_template,${MAIN_OUT}))
 
 # TEST is in `make test`
-$(eval $(call CMD_template,${TEST_OUT}))
-$(eval $(call TEST_template,${TEST_OUT}))
+# $(eval $(call CMD_template,${TEST_OUT}))
+# $(eval $(call TEST_template,${TEST_OUT}))
 

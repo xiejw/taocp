@@ -29,11 +29,42 @@ BacktrackSolver::BacktrackSolver( size_t                      num_vars,
     b_.resize( l_.size( ) );
     c_.resize( l_.size( ) );
 
+    /* Make each list head 2 .. 2n+1 an empty circular list: F and B point
+     * back to the head itself. C(l) = 0 (no clauses yet) is already done by
+     * the zero-fill above. */
+    for ( size_t l = 2; l < 2 + 2 * num_vars_; l++ ) {
+        f_[l] = l;
+        b_[l] = l;
+        /* c_[l] = 0; */
+    }
+
     size_t p = l_.size( );
     for ( size_t j = 0; j < num_clauses_; j++ ) {
         auto &seg = ( *segments )[j];
         for ( size_t i = seg.begin; i < seg.end; i++ ) {
-            l_[--p] = ( *clauses )[i];
+            Literal l = ( *clauses )[i];
+
+            /* Each clause must list its literals in strictly ascending order
+             * (no duplicates). Compare every literal with the one before it
+             * in the same clause, and panic if it is not larger. */
+            if ( i > seg.begin && ( *clauses )[i - 1] >= l ) {
+                PANIC( "clause %zu is not sorted: literal %" PRI_LITERAL
+                       " at %zu >= literal %" PRI_LITERAL " at %zu",
+                       j + 1, ( *clauses )[i - 1], i - 1, l, i );
+            }
+
+            --p;
+
+            /* Set up circular list */
+
+            f_[p]     = l;
+            f_[b_[l]] = p;
+
+            b_[p] = b_[l];
+            b_[l] = p;
+
+            c_[l]++;
+            l_[p] = l;
         }
 
         /* Clause ids are 1-based: segment j is clause j+1. Its cells are
