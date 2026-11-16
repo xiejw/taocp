@@ -44,6 +44,16 @@ BacktrackSolver::BacktrackSolver( size_t                      num_vars,
         for ( size_t i = seg.begin; i < seg.end; i++ ) {
             Literal l = ( *clauses )[i];
 
+            /* Variables are 1-based, so the variable of l must be in
+             * 1 .. n. Otherwise l would fall outside the list heads
+             * 2 .. 2n+1. */
+            size_t var = decodeVariable( l );
+            if ( var < 1 || var > num_vars_ ) {
+                PANIC( "clause %zu has literal %" PRI_LITERAL
+                       " with variable %zu out of range 1 .. %zu",
+                       j + 1, l, var, num_vars_ );
+            }
+
             /* Each clause must list its literals in strictly ascending order
              * (no duplicates). Compare every literal with the one before it
              * in the same clause, and panic if it is not larger. */
@@ -64,6 +74,7 @@ BacktrackSolver::BacktrackSolver( size_t                      num_vars,
             b_[l] = p;
 
             c_[l]++;
+            c_[p] = j + 1;  // clause id 1-based.
             l_[p] = l;
         }
 
@@ -77,7 +88,97 @@ BacktrackSolver::BacktrackSolver( size_t                      num_vars,
 auto
 BacktrackSolver::searchOneSolution( ) -> std::optional<std::vector<Literal>>
 {
-    return std::nullopt;
+    /* moves[d] for d = 1 .. n (1-based); moves[0] is unused. */
+    std::vector<size_t> moves( num_vars_ + 1 );
+
+A1:  // Initialize
+    size_t m = num_clauses_;
+    size_t a = m;
+    size_t d = 1;
+
+A2:  // Choose
+    Literal l = 2 * d;
+    if ( c_[l] <= c_[l + 1] ) l++;
+    moves[d] = ( l & 1 ) + 4 * ( c_[l ^ 1] == 0 );
+
+    if ( c_[l] == a ) {
+        /* Terminate happily. Variable v is true (literal 2v) when moves[v] is
+         * even, and false (literal 2v+1) when it is odd. */
+        std::vector<Literal> solution;
+        solution.reserve( num_vars_ );
+        for ( size_t v = 1; v <= num_vars_; v++ ) {
+            Literal lit = literal( v );
+            solution.push_back( moves[v] % 2 == 0 ? lit : complement( lit ) );
+        }
+        return solution;
+    }
+
+A3:  // Remove -l
+{
+    Literal comp_l = complement( l );
+
+    bool empty_clause = false;
+    for ( size_t c = f_[comp_l]; c != comp_l; c = f_[c] ) {
+        if ( ( size_[c]-- ) == 1 ) empty_clause = true;
+    }
+
+    if ( empty_clause ) goto A5;
+}
+A4:  // Deactivate l's clauses
+{
+    // Suppress l's clausese
+    for ( size_t p = f_[l]; p != l; p = f_[p] ) {
+        size_t j = c_[p];  // clause id 1-based.
+        size_t i = start_[p];
+        for ( size_t s = i; s < i + size_[j] - 1; s++ ) {
+            size_t q = f_[s];
+            size_t r = b_[s];
+            b_[q]    = r;
+            f_[r]    = q;
+            c_[l_[s]]--;
+        }
+    }
+
+    a -= c_[l];
+    d++;
+    goto A2;
+}
+A5:  // Try again
+    if ( moves[d] < 2 ) {
+        moves[d] = 3 - moves[d];
+        l        = 2 * d + ( moves[d] & 1 );
+        goto A3;
+    }
+A6:  // Backtrack
+    if ( d == 1 ) return std::nullopt;
+    d--;
+    l = 2 * d + ( moves[d] & 1 );
+A7:  // Reactivate l's clauses
+{
+    a += c_[l];
+
+    // Reactivate l's clausese
+    for ( size_t p = b_[l]; p != l; p = b_[p] ) {
+        size_t j = c_[p];  // clause id 1-based.
+        size_t i = start_[p];
+        for ( size_t s = i; s < i + size_[j] - 1; s++ ) {
+            size_t q = f_[s];
+            size_t r = b_[s];
+            b_[q]    = s;
+            f_[r]    = s;
+            c_[l_[s]]++;
+        }
+    }
+}
+A8:  // Unremove -l
+{
+    Literal comp_l = complement( l );
+
+    for ( size_t c = f_[comp_l]; c != comp_l; c = f_[c] ) {
+        size_[c]++;
+    }
+    goto A5;
+}
 }
 
 }  // namespace taocp
