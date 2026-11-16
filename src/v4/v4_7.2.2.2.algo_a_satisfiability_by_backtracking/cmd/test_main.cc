@@ -1,10 +1,13 @@
 // forge:skip
+#include <algorithm>
+
 #include "sat_backtrack.h"
 #include "sat_literal.h"
 #include "test_macros.h"
 
 using taocp::BacktrackSolver;
 using taocp::complement;
+using taocp::decodeVariable;
 using taocp::Literal;
 using taocp::literal;
 using taocp::Segment;
@@ -17,7 +20,7 @@ struct Table {
     std::vector<Segment> segments;
 };
 
-/// Builds a `Table` from `cs`, one inner list per clause.
+/// Builds a `Table` from `cs`, one inner list per clause, each sorted.
 auto
 makeTable( const std::initializer_list<std::initializer_list<Literal>> *cs )
     -> Table
@@ -26,6 +29,10 @@ makeTable( const std::initializer_list<std::initializer_list<Literal>> *cs )
     for ( auto &c : *cs ) {
         size_t begin = t.clauses.size( );
         for ( auto lit : c ) t.clauses.push_back( lit );
+        /* The solver requires the literals of each clause in ascending order.
+         */
+        std::sort( t.clauses.begin( ) + static_cast<ssize_t>( begin ),
+                   t.clauses.end( ) );
         t.segments.push_back( { begin, t.clauses.size( ) } );
     }
     return t;
@@ -169,7 +176,7 @@ FORGE_TEST( simple )
     EXPECT_TRUE( res.value( ).size( ) == 3, "3 eles" );
     EXPECT_TRUE( res.value( )[0] == literal( 1 ), "[0] == 1" );
     EXPECT_TRUE( res.value( )[1] == literal( 2 ), "[1] == 2" );
-    EXPECT_TRUE( res.value( )[2] == complement( literal( 3 ) ), "[2] == c3" );
+    EXPECT_TRUE( decodeVariable( res.value( )[2] ) == 3, "var([2]) == 3" );
 }
 
 FORGE_TEST( reverse )

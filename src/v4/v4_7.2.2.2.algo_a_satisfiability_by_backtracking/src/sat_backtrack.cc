@@ -32,14 +32,14 @@ BacktrackSolver::BacktrackSolver( size_t                      num_vars,
     /* Make each list head 2 .. 2n+1 an empty circular list: F and B point
      * back to the head itself. C(l) = 0 (no clauses yet) is already done by
      * the zero-fill above. */
-    for ( size_t l = 2; l < 2 + 2 * num_vars_; l++ ) {
-        f_[l] = l;
-        b_[l] = l;
-        /* c_[l] = 0; */
+    for ( size_t p = 2; p < 2 + 2 * num_vars_; p++ ) {
+        f_[p] = p;
+        b_[p] = p;
+        /* c_[p] = 0; */
     }
 
     size_t p = l_.size( );
-    for ( size_t j = 0; j < num_clauses_; j++ ) {
+    for ( size_t j = 0; j < num_clauses_; j++ ) {  // j is clause id.
         auto &seg = ( *segments )[j];
         for ( size_t i = seg.begin; i < seg.end; i++ ) {
             Literal l = ( *clauses )[i];
@@ -65,7 +65,7 @@ BacktrackSolver::BacktrackSolver( size_t                      num_vars,
 
             --p;
 
-            /* Set up circular list */
+            /* Set up circular lists */
 
             f_[p]     = l;
             f_[b_[l]] = p;
@@ -120,10 +120,11 @@ A3:  // Remove -l
     bool   empty_clause = false;
     size_t last_p       = 0;
     for ( size_t p = f_[comp_l]; p != comp_l; p = f_[p] ) {
-        size_t j = c_[p];  // claude id.
+        size_t j = c_[p];  // clause id.
         if ( ( size_[j]-- ) == 1 ) {
             empty_clause = true;
             last_p       = p;
+            break;
         }
     }
 
@@ -135,12 +136,13 @@ A3:  // Remove -l
         goto A5;
     }
 }
+
 A4:  // Deactivate l's clauses
 {
     // Suppress l's clausese
     for ( size_t p = f_[l]; p != l; p = f_[p] ) {
         size_t j = c_[p];  // clause id 1-based.
-        size_t i = start_[p];
+        size_t i = start_[j];
         for ( size_t s = i; s < i + size_[j] - 1; s++ ) {
             size_t q = f_[s];
             size_t r = b_[s];
@@ -154,16 +156,19 @@ A4:  // Deactivate l's clauses
     d++;
     goto A2;
 }
+
 A5:  // Try again
     if ( moves[d] < 2 ) {
         moves[d] = 3 - moves[d];
         l        = 2 * d + ( moves[d] & 1 );
         goto A3;
     }
+
 A6:  // Backtrack
     if ( d == 1 ) return std::nullopt;
     d--;
     l = 2 * d + ( moves[d] & 1 );
+
 A7:  // Reactivate l's clauses
 {
     a += c_[l];
@@ -171,7 +176,7 @@ A7:  // Reactivate l's clauses
     // Reactivate l's clausese
     for ( size_t p = b_[l]; p != l; p = b_[p] ) {
         size_t j = c_[p];  // clause id 1-based.
-        size_t i = start_[p];
+        size_t i = start_[j];
         for ( size_t s = i; s < i + size_[j] - 1; s++ ) {
             size_t q = f_[s];
             size_t r = b_[s];
@@ -181,6 +186,7 @@ A7:  // Reactivate l's clauses
         }
     }
 }
+
 A8:  // Unremove -l
 {
     Literal comp_l = complement( l );

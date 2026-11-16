@@ -54,7 +54,7 @@ toEvalLiteral( Literal lit ) -> eval::Literal
 struct BacktrackDelegator : eval::Delegator {
     auto name( ) const -> const char * override
     {
-        return "Algorithm B: Satisfiability by Backtracking";
+        return "Algorithm A: Satisfiability by Backtracking";
     }
 
     auto onInit( const eval::Bench *bench ) -> void override
@@ -98,7 +98,7 @@ struct BacktrackDelegator : eval::Delegator {
 int
 main( )
 {
-    //BacktrackDelegator d;
-    //eval::runAll( &d );
+    BacktrackDelegator d;
+    eval::runAll( &d );
     return 0;
 }
