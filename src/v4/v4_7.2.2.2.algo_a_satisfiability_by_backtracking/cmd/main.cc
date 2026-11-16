@@ -98,7 +98,7 @@ struct BacktrackDelegator : eval::Delegator {
 int
 main( )
 {
-    BacktrackDelegator d;
-    eval::runAll( &d );
+    //BacktrackDelegator d;
+    //eval::runAll( &d );
     return 0;
 }

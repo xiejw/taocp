@@ -117,12 +117,23 @@ A3:  // Remove -l
 {
     Literal comp_l = complement( l );
 
-    bool empty_clause = false;
-    for ( size_t c = f_[comp_l]; c != comp_l; c = f_[c] ) {
-        if ( ( size_[c]-- ) == 1 ) empty_clause = true;
+    bool   empty_clause = false;
+    size_t last_p       = 0;
+    for ( size_t p = f_[comp_l]; p != comp_l; p = f_[p] ) {
+        size_t j = c_[p];  // claude id.
+        if ( ( size_[j]-- ) == 1 ) {
+            empty_clause = true;
+            last_p       = p;
+        }
     }
 
-    if ( empty_clause ) goto A5;
+    if ( empty_clause ) {
+        for ( size_t p = last_p; p != comp_l; p = b_[p] ) {
+            size_t j = c_[p];  // claude id.
+            size_[j]++;
+        }
+        goto A5;
+    }
 }
 A4:  // Deactivate l's clauses
 {
@@ -174,8 +185,9 @@ A8:  // Unremove -l
 {
     Literal comp_l = complement( l );
 
-    for ( size_t c = f_[comp_l]; c != comp_l; c = f_[c] ) {
-        size_[c]++;
+    for ( size_t p = f_[comp_l]; p != comp_l; p = f_[p] ) {
+        size_t j = c_[p];  // clause id
+        size_[j]++;
     }
     goto A5;
 }
