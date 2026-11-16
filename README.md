@@ -60,8 +60,21 @@ and "uncovering" of rows and columns—incredibly efficient.
 
 |Algorithm List|
 | :--- |
+| V4 7.2.2.2A Satisfiability by Backtracking|
 | V4 7.2.2.2B Satisfiability by Watching|
 | V4 7.2.2.2C CDCL (WIP)|
+
+Algorithm A is a relatively straightforward backtracking algorithm augmented
+with some Dancing Links techniques. It maintains several data structures,
+including forward and backward links, start positions, sizes, and clause IDs.
+
+The primary inefficiencies stem from two areas:
+- Fixed iteration order: The algorithm follows a predetermined iteration order
+  and does not fully leverage unit clause propagation to prune the search space
+  early.
+- Data structure maintenance overhead: Despite using Dancing Links, updating and
+  rolling back (undoing) these data structures remains computationally
+  expensive.
 
 Algorithm B is an elegant optimization for CNF-based solvers that improves
 efficiency by monitoring only one "watched" literal per clause. Since the solver
