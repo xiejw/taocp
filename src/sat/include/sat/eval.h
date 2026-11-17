@@ -153,6 +153,8 @@ struct BenchInfo {
     const char *eqn;
     const char *name;
     size_t      num_vars;
+    /// Whether the clauses are satisfiable (known from TAOCP).
+    bool satisfiable;
 };
 
 /// Clause j is `clauses[begin, end)` where `{begin, end} = segments[j]`.
@@ -238,6 +240,7 @@ Bench::get( ID id ) -> Bench
             /*eqn=*/"6",
             /*name=*/"rivest",
             /*num_vars=*/4,
+            /*satisfiable=*/false,
         };
         std::initializer_list<std::initializer_list<ssize_t>> cs{
             { 1,  2, -3},
@@ -259,6 +262,7 @@ Bench::get( ID id ) -> Bench
             /*eqn=*/"7",
             /*name=*/"rivest7",
             /*num_vars=*/4,
+            /*satisfiable=*/true,
         };
         std::initializer_list<std::initializer_list<ssize_t>> cs{
             { 1,  2, -3},
@@ -278,6 +282,7 @@ Bench::get( ID id ) -> Bench
             /*eqn=*/"9",
             /*name=*/"waerden(3,3;9)",
             /*num_vars=*/9,
+            /*satisfiable=*/false,
         };
         return detail::waerden33( &info );
     }
@@ -299,6 +304,7 @@ printBenchInfo( const Bench *bench ) -> void
     ::printf( "    eqn: \"%s\",\n", info->eqn );
     ::printf( "    name: \"%s\",\n", info->name );
     ::printf( "    num_vars: %zu,\n", info->num_vars );
+    ::printf( "    satisfiable: %s,\n", info->satisfiable ? "true" : "false" );
     ::printf( "    num_clauses: %zu,\n", bench->segments.size( ) );
     ::printf( "    table_size: %zu,\n", bench->clauses.size( ) );
     ::printf( "}\n" );

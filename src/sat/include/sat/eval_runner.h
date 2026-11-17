@@ -114,12 +114,20 @@ runAll( Delegator *d ) -> void
         auto res = d->onSearchOneSolution( );
         timer.stopAndReport( "onSearchOneSolution" );
 
+        bool found_sat = res.solution_opt.has_value( );
+        if ( found_sat != bench.info.satisfiable ) {
+            TAOCP_EVAL_PANIC( "bench %s: expected %s, solver returned %s",
+                              bench.info.name,
+                              bench.info.satisfiable ? "SAT" : "UNSAT",
+                              found_sat ? "SAT" : "UNSAT" );
+        }
+
         if ( res.solution_opt ) {
             detail::verify( &bench, &res.solution_opt.value( ) );
             ::printf( "Satisfiable (verified):\n" );
             detail::printLiterals( &res.solution_opt.value( ) );
         } else {
-            ::printf( "Unsatisfiable\n" );
+            ::printf( "Unsatisfiable (verified)\n" );
         }
     }
 }
