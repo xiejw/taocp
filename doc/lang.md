@@ -2,7 +2,7 @@
 
 This document defines mandatory rules for all C++ code in this project.
 
-Last modified: 2026-11.
+Last modified: 2026-11-17.
 
 
 ## Language Standard
