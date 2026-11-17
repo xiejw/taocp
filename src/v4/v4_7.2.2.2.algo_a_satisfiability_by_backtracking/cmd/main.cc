@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <optional>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -26,11 +25,7 @@ namespace eval = taocp::sat::eval;
 /* `Segment` and `eval::Segment` are separate types, but with identical layout,
  * so the benchmark segments can be copied into the solver's with one memcpy.
  */
-static_assert( std::is_trivially_copyable_v<Segment> );
-static_assert( std::is_trivially_copyable_v<eval::Segment> );
-static_assert( sizeof( Segment ) == sizeof( eval::Segment ) );
-static_assert( offsetof( Segment, begin ) == offsetof( eval::Segment, begin ) );
-static_assert( offsetof( Segment, end ) == offsetof( eval::Segment, end ) );
+TAOCP_EVAL_ASSERT_SEGMENT_LAYOUT( Segment );
 
 namespace {
 

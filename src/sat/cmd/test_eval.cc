@@ -167,6 +167,16 @@ FORGE_TEST( all_unsatisfiable )
     return NULL;
 }
 
+FORGE_TEST( info_satisfiable_matches_brute_force )
+{
+    for ( auto id : { ID::Rivest, ID::Rivest7, ID::Waerden339 } ) {
+        auto b = Bench::get( id );
+        EXPECT_TRUE( b.info.satisfiable == satisfiable_by_brute_force( &b ),
+                     "info.satisfiable mismatch" );
+    }
+    return NULL;
+}
+
 FORGE_TEST( rivest7_is_satisfiable )
 {
     auto r = Bench::get( ID::Rivest7 );

@@ -8,115 +8,59 @@
 namespace taocp {
 
 namespace {
-
 constexpr bool kDebugMode = false;
-
-auto
-debugCheck( size_t num_vars, size_t size, const Literal *lits ) -> void
-{
-    for ( size_t x = 0; x < size; x++ ) {
-        auto lit = lits[x];
-        auto var = decodeVariable( lit );
-        if ( var > num_vars ) {
-            PANIC( "lit" );
-        }
-        if ( var < 1 ) {
-            PANIC( "lit < 1" );
-        }
-    }
-}
 }  // namespace
 
-WatchSolver::WatchSolver( size_t num_vars, size_t num_clauses,
-                          size_t num_reserved_cells )
+WatchSolver::WatchSolver( size_t num_vars, const std::vector<Literal> *clauses,
+                          const std::vector<Segment> *segments )
     : num_vars_( num_vars ),
-      num_clauses_( num_clauses ),
-      num_emitted_clauses_( 0 ),
-      start_( 1 + num_clauses ),
+      num_clauses_( segments->size( ) ),
+      start_( 1 + num_clauses_ ),
       watch_( 2 + 2 * num_vars ),
-      link_( 1 + num_clauses )
+      link_( 1 + num_clauses_ )
 {
-    cells_.reserve( 1 + num_reserved_cells );
+    /* Cell 0 is a placeholder; the clause cells follow from cell 1. */
+    cells_.reserve( 1 + clauses->size( ) );
     cells_.push_back( 0 );
-}
 
-WatchSolver::WatchSolver( size_t num_vars, size_t num_clauses )
-    : WatchSolver( num_vars, num_clauses, /*a guess*/ 5 * num_clauses )
-{
-}
+    /* Clause ids are 1-based and assigned in decreasing order: the first
+     * clause in `segments` is clause m, the last one is clause 1. So clause
+     * j occupies cells [START(j), START(j-1)), with START(0) one past the
+     * final cell. */
+    for ( size_t i = 0; i < num_clauses_; i++ ) {
+        auto  &seg       = ( *segments )[i];
+        size_t clause_id = num_clauses_ - i;
 
-auto
-WatchSolver::reserveCells( size_t num_cells ) -> void
-{
-    cells_.reserve( 1 + num_cells );
-}
+        if ( seg.begin >= seg.end ) PANIC( "clause %zu is empty.", clause_id );
 
-auto
-WatchSolver::emitClause( std::initializer_list<Literal> lits ) -> void
-{
-    this->emitClause( lits.size( ), std::data( lits ) );
-}
+        start_[clause_id] = cells_.size( );
 
-auto
-WatchSolver::emitClause( size_t size, const Literal *lits ) -> void
-{
-    /* === --- Few quick sanity checks. ----------------------------- === */
-    if ( size == 0 ) PANIC( "emitted clause cannot be empty." );
-    if ( num_emitted_clauses_ >= num_clauses_ )
-        PANIC( "emitted clause is full. Cannot submit one more." );
-
-    if ( kDebugMode ) debugCheck( this->num_vars_, size, lits );
-
-    /* Clause id is 1-based, and decreasing order. */
-    auto clause_id = num_clauses_ - num_emitted_clauses_;
-
-    /* Put each literal into the internal data structures. */
-    bool is_first = true;
-    for ( size_t x = 0; x < size; x++ ) {
-        auto lit = lits[x];
-
-        /* Literal is already encoded as 2x or 2x+1 (see sat_literal.h). */
-        auto encoded_lit = lit;
-        cells_.push_back( encoded_lit );
-
-        if ( !is_first ) continue;
-
-        /* === --- Special block to handle the first literal. ------ ===
-         *
-         * Start, Watch, Link should be recorded correctly.
-         */
-        is_first = false;
-
-        /* Update the start array. */
-        auto pos          = cells_.size( );
-        start_[clause_id] = pos - 1;
-
-        /* Update the watch list. */
-        if ( watch_[encoded_lit] == 0 ) {
-            // This branch seems is identical to next.
-            watch_[encoded_lit] = clause_id;
-        } else {
-            link_[clause_id]    = watch_[encoded_lit];
-            watch_[encoded_lit] = clause_id;
+        for ( size_t x = seg.begin; x < seg.end; x++ ) {
+            /* Literal is already encoded as 2x or 2x+1 (see sat_literal.h).
+             * Variables are 1-based, so the variable must be in 1 .. n. */
+            Literal lit = ( *clauses )[x];
+            size_t  var = decodeVariable( lit );
+            if ( var < 1 || var > num_vars_ ) {
+                PANIC( "clause %zu has literal %" PRI_LITERAL
+                       " with variable %zu out of range 1 .. %zu",
+                       clause_id, lit, var, num_vars_ );
+            }
+            cells_.push_back( lit );
         }
+
+        /* The first literal is watched: push clause j onto its watch list. */
+        Literal watched  = ( *clauses )[seg.begin];
+        link_[clause_id] = watch_[watched];
+        watch_[watched]  = clause_id;
     }
 
-    num_emitted_clauses_++;
-
-    if ( num_emitted_clauses_ == num_clauses_ ) {
-        /* Once all clauses are emitted, the start[0] - 1 should
-         * point to the final cell. */
-        start_[0] = cells_.size( );
-    }
+    /* START(0) - 1 points to the final cell. */
+    start_[0] = cells_.size( );
 }
 
 auto
 WatchSolver::searchOneSolution( ) -> std::optional<std::vector<Literal>>
 {
-    if ( num_emitted_clauses_ != num_clauses_ ) {
-        PANIC( "emitted clauses are not enough. expected {}, got {}",
-               (size_t)num_clauses_, (size_t)num_emitted_clauses_ );
-    }
     /* === --- This algorithm is Vol 4b, Page 215. ------------------ === */
 
 B1:  // Init

@@ -1,4 +1,7 @@
 // forge:skip
+#include <stddef.h>
+#include <string.h>
+
 #include <optional>
 #include <utility>
 #include <vector>
@@ -13,9 +16,15 @@ using taocp::decodeVariable;
 using taocp::isLiteralComplement;
 using taocp::literal;
 using taocp::Literal;
+using taocp::Segment;
 using taocp::WatchSolver;
 
 namespace eval = taocp::sat::eval;
+
+/* `Segment` and `eval::Segment` are separate types, but with identical layout,
+ * so the benchmark segments can be copied into the solver's with one memcpy.
+ */
+TAOCP_EVAL_ASSERT_SEGMENT_LAYOUT( Segment );
 
 namespace {
 
@@ -44,15 +53,18 @@ struct WatchDelegator : eval::Delegator {
 
     auto onInit( const eval::Bench *bench ) -> void override
     {
-        solver.emplace( /*num_vars=*/bench->info.num_vars,
-                        /*num_clauses=*/bench->segments.size( ) );
-        std::vector<Literal> lits;
-        for ( auto &seg : bench->segments ) {
-            lits.clear( );
-            for ( size_t i = seg.begin; i < seg.end; i++ )
-                lits.push_back( toSolverLiteral( bench->clauses[i] ) );
-            solver->emitClause( lits.size( ), lits.data( ) );
-        }
+        /* Literals are translated at the same indices, so the memcpy'd
+         * segments below stay valid. */
+        std::vector<Literal> clauses( bench->clauses.size( ) );
+        for ( size_t i = 0; i < clauses.size( ); i++ )
+            clauses[i] = toSolverLiteral( bench->clauses[i] );
+
+        std::vector<Segment> segments( bench->segments.size( ) );
+        ::memcpy( segments.data( ), bench->segments.data( ),
+                  segments.size( ) * sizeof( Segment ) );
+
+        solver.emplace( /*num_vars=*/bench->info.num_vars, &clauses,
+                        &segments );
     }
 
     auto onSearchOneSolution( ) -> eval::Solution override
