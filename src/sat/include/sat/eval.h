@@ -21,6 +21,7 @@
 
 #include <array>
 #include <initializer_list>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -165,6 +166,20 @@ struct Segment {
     size_t begin;
     size_t end;
 };
+
+/// Asserts at compile time that `T` has the same layout as `eval::Segment`
+/// (trivially copyable, same size, `begin` and `end` at the same offsets), so
+/// `eval::Segment`s can be copied into `T`s with one memcpy. Use at namespace
+/// scope, e.g. `TAOCP_EVAL_ASSERT_SEGMENT_LAYOUT( taocp::Segment );`.
+#define TAOCP_EVAL_ASSERT_SEGMENT_LAYOUT( T )                              \
+    static_assert( std::is_trivially_copyable_v<T> );                      \
+    static_assert(                                                         \
+        std::is_trivially_copyable_v<::taocp::sat::eval::Segment> );       \
+    static_assert( sizeof( T ) == sizeof( ::taocp::sat::eval::Segment ) ); \
+    static_assert( offsetof( T, begin ) ==                                 \
+                   offsetof( ::taocp::sat::eval::Segment, begin ) );       \
+    static_assert( offsetof( T, end ) ==                                   \
+                   offsetof( ::taocp::sat::eval::Segment, end ) )
 
 /// A benchmark problem.
 struct Bench {

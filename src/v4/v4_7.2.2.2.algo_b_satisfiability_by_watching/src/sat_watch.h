@@ -5,7 +5,6 @@
 #ifndef TAOCP_SRC_SAT_WATCH_H_
 #define TAOCP_SRC_SAT_WATCH_H_
 
-#include <initializer_list>
 #include <optional>
 #include <vector>
 
@@ -13,11 +12,16 @@
 
 namespace taocp {
 
+/// Clause j is `clauses[begin, end)` where `{begin, end} = segments[j]`.
+struct Segment {
+    size_t begin;
+    size_t end;
+};
+
 class WatchSolver {
   private:
     size_t num_vars_;
     size_t num_clauses_;
-    size_t num_emitted_clauses_;
 
     std::vector<size_t> cells_; /* Index by cell. */
 
@@ -50,20 +54,16 @@ class WatchSolver {
   public:
     /* === --- Constructors ----------------------------------------- === */
 
-    /* For all constructors, num_vars and num_clauses are fixed and
-     * cannot be changed anymore. num_reserved_cells should be the best
-     * guess for the application. It requires one more space for the
-     * placeholder. */
-    WatchSolver( size_t num_vars, size_t num_clauses,
-                 size_t num_reserved_cells );
-    WatchSolver( size_t num_vars, size_t num_clauses );
-
-    auto reserveCells( size_t num_cells ) -> void;
+    /* All clauses are given at once, laid out like `eval::Bench`: clause j
+     * is `(*clauses)[begin, end)` where `{begin, end} = (*segments)[j]`.
+     * Variables are 1-based in [1, num_vars]. The first literal of each
+     * clause is the one initially watched. The solver copies what it needs;
+     * it does not keep the pointers. */
+    WatchSolver( size_t num_vars, const std::vector<Literal> *clauses,
+                 const std::vector<Segment> *segments );
 
   public:
-    /* === --- Clauses and Search ---------------------------------- === */
-    void emitClause( size_t size, const Literal *lits );
-    void emitClause( std::initializer_list<Literal> lits );
+    /* === --- Search ---------------------------------------------- === */
     auto searchOneSolution( ) -> std::optional<std::vector<Literal>>;
 };
 }  // namespace taocp
