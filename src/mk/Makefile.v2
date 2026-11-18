@@ -121,7 +121,7 @@ ${BUILD_OBJS}: ${BUILD}
 	@mkdir -p $@
 
 fmt:
-	~/Workspace/y/tools/scripts/clang_format_all.sh .
+	fmt
 
 clean:
 	rm -rf ${BUILD}
