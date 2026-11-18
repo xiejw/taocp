@@ -113,6 +113,7 @@ enum class ID {
     Rivest7,
     Waerden339,
     Langford3,
+    Langford9,
     Count,
 };
 
@@ -370,6 +371,24 @@ Bench::get( ID id ) -> Bench
             /*satisfiable=*/true,
         };
         return detail::langford( &info, 3 );
+    }
+    case ID::Langford9: {
+        // Langford pairs exist only when n mod 4 is 0 or 3; 9 mod 4 = 1.
+        BenchInfo info{
+            /*vol=*/"4b",
+            /*page=*/"219",
+            /*eqn=*/"??",
+            /*name=*/"langford(9)",
+            /*desc=*/
+            "Place two 1s, two 2s, ..., two 9s into 18 slots so that exactly "
+            "k slots intervene between the two k's, for each k.",
+            // One var per placement (i, i+k+1) of k, i in 1..=2n-k-1: 16 for
+            // k=1 down to 8 for k=9, i.e. 3n(n-1)/2 = 108. Minus 1 for (8,18)
+            // of k=9, dropped by symmetry (its reversal (1,11) is kept): 107.
+            /*num_vars=*/107,
+            /*satisfiable=*/false,
+        };
+        return detail::langford( &info, 9 );
     }
     case ID::Count:
         break;

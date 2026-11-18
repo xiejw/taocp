@@ -80,6 +80,8 @@ FORGE_TEST( get_returns_num_vars )
     EXPECT_TRUE( Bench::get( ID::Rivest7 ).info.num_vars == 4, "rivest7" );
     EXPECT_TRUE( Bench::get( ID::Waerden339 ).info.num_vars == 9, "waerden" );
     EXPECT_TRUE( Bench::get( ID::Langford3 ).info.num_vars == 8, "langford" );
+    EXPECT_TRUE( Bench::get( ID::Langford9 ).info.num_vars == 107,
+                 "langford9" );
     return NULL;
 }
 
@@ -133,13 +135,16 @@ FORGE_TEST( clause_counts )
     auto l = Bench::get( ID::Langford3 );
     EXPECT_TRUE( l.segments.size( ) == 32, "langford segments" );
     EXPECT_TRUE( l.clauses.size( ) == 70, "langford clauses" );
+    auto l9 = Bench::get( ID::Langford9 );
+    EXPECT_TRUE( l9.segments.size( ) == 1856, "langford9 segments" );
+    EXPECT_TRUE( l9.clauses.size( ) == 3979, "langford9 clauses" );
     return NULL;
 }
 
 FORGE_TEST( segments_tile_clauses )
 {
-    for ( auto id :
-          { ID::Rivest, ID::Rivest7, ID::Waerden339, ID::Langford3 } ) {
+    for ( auto id : { ID::Rivest, ID::Rivest7, ID::Waerden339, ID::Langford3,
+                      ID::Langford9 } ) {
         auto   b   = Bench::get( id );
         size_t pos = 0;
         for ( auto &seg : b.segments ) {
