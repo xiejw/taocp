@@ -21,6 +21,7 @@
 
 #include <array>
 #include <initializer_list>
+#include <set>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -251,13 +252,17 @@ waerden33( const BenchInfo *info ) -> Bench
 /// Variable x_v means "the two k's go into slots i and i+k+1", for every k in
 /// 1..=n and i in 1..=2n-k-1, numbered in that (k, then i) order. To break the
 /// left-right symmetry (reversing a solution gives another solution), the
-/// final option of the final digit, k = n at i = n-1 (touching the right
-/// boundary), is removed: its reversal is k = n at i = 1, which is kept. So
-/// there are 3n(n-1)/2 - 1 variables. Each digit k
+/// final digit k = n keeps only i <= n/2: reversal maps its placement i to
+/// n-i, so every option with i > n/2 mirrors a kept one (i = n/2, for even n,
+/// is its own mirror and is kept). That removes n-1-floor(n/2) options, so
+/// there are 3n(n-1)/2 - (n-1-floor(n/2)) variables. Each digit k
 /// and each slot s must be covered exactly once; for each of these 3n
 /// constraints, one clause says "at least one" (all its variables positive)
 /// and binary clauses say "at most one" (¬x_u ¬x_v for every pair u < v). All
-/// digit constraints come first, then all slot constraints.
+/// digit constraints come first, then all slot constraints. A binary clause
+/// is emitted only once: two placements of k that share a slot, e.g. (i,
+/// i+k+1) and (i+k+1, i+2k+2), would otherwise get ¬x_u ¬x_v from both the
+/// digit-k and the slot constraint.
 inline auto
 langford( const BenchInfo *info, ssize_t n ) -> Bench
 {
@@ -271,7 +276,7 @@ langford( const BenchInfo *info, ssize_t n ) -> Bench
     ssize_t                           v = 0;
     for ( ssize_t k = 1; k <= n; k++ ) {
         for ( ssize_t i = 1; i <= 2 * n - k - 1; i++ ) {
-            if ( k == n && i == n - 1 ) continue;  // Symmetry breaking.
+            if ( k == n && i > n / 2 ) continue;  // Symmetry breaking.
             v++;
             digits[static_cast<size_t>( k )].push_back( v );
             slots[static_cast<size_t>( i )].push_back( v );
@@ -285,13 +290,15 @@ langford( const BenchInfo *info, ssize_t n ) -> Bench
     // Stage 2: emit the exactly-one clauses of each constraint.
     //
     // This is Eq(11) on Page 189.
-    Bench b{ *info, { }, { } };
-    auto  exactlyOne = [&b]( const std::vector<ssize_t> &vs ) {
+    Bench                                 b{ *info, { }, { } };
+    std::set<std::pair<ssize_t, ssize_t>> seen;  // Emitted binary clauses.
+    auto exactlyOne = [&b, &seen]( const std::vector<ssize_t> &vs ) {
         size_t begin = b.clauses.size( );
         for ( ssize_t u : vs ) b.clauses.push_back( Literal::newPos( u ) );
         b.segments.push_back( { begin, b.clauses.size( ) } );
         for ( size_t a = 0; a < vs.size( ); a++ ) {
             for ( size_t c = a + 1; c < vs.size( ); c++ ) {
+                if ( !seen.insert( { vs[a], vs[c] } ).second ) continue;
                 begin = b.clauses.size( );
                 b.clauses.push_back( Literal::newNeg( vs[a] ) );
                 b.clauses.push_back( Literal::newNeg( vs[c] ) );
@@ -380,8 +387,8 @@ Bench::get( ID id ) -> Bench
             "Place two 1s, two 2s and two 3s into 6 slots so that exactly k "
             "slots intervene between the two k's, for each k.",
             // One var per placement (i, i+k+1) of k, i in 1..=2n-k-1: 4 for
-            // k=1, 3 for k=2, 2 for k=3. Minus 1 for (2,6) of k=3, dropped
-            // by symmetry (its reversal (1,5) is kept): 4+3+2-1 = 8.
+            // k=1, 3 for k=2, 2 for k=3. For k=3 keep only i <= 3/2, dropping
+            // (2,6), the mirror of (1,5): 4+3+2-1 = 8.
             /*num_vars=*/8,
             /*satisfiable=*/true,
         };
@@ -398,9 +405,10 @@ Bench::get( ID id ) -> Bench
             "Place two 1s, two 2s, ..., two 9s into 18 slots so that exactly "
             "k slots intervene between the two k's, for each k.",
             // One var per placement (i, i+k+1) of k, i in 1..=2n-k-1: 16 for
-            // k=1 down to 8 for k=9, i.e. 3n(n-1)/2 = 108. Minus 1 for (8,18)
-            // of k=9, dropped by symmetry (its reversal (1,11) is kept): 107.
-            /*num_vars=*/107,
+            // k=1 down to 8 for k=9, i.e. 3n(n-1)/2 = 108. For k=9 keep only
+            // i <= 9/2, i.e. i in 1..=4; i in 5..=8 mirror i' = 9-i in 4..=1,
+            // so drop those 4: 108-4 = 104.
+            /*num_vars=*/104,
             /*satisfiable=*/false,
         };
         return detail::langford( &info, 9 );
