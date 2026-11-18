@@ -1,5 +1,5 @@
 // vim: ft=cpp
-// forge:v2
+// forge:skip
 //
 // Benchmark problems for evaluating SAT solvers. Header-only.
 //
@@ -112,6 +112,7 @@ enum class ID {
     Rivest,
     Rivest7,
     Waerden339,
+    Langford3,
     Count,
 };
 
@@ -152,6 +153,7 @@ struct BenchInfo {
     const char *page;
     const char *eqn;
     const char *name;
+    const char *desc;  /// A compact description of the problem.
     size_t      num_vars;
     /// Whether the clauses are satisfiable (known from TAOCP).
     bool satisfiable;
@@ -227,6 +229,67 @@ waerden33( const BenchInfo *info ) -> Bench
     return b;
 }
 
+/// langford(n): place two 1s, two 2s, ..., two n's into 2n slots so that
+/// exactly k slots intervene between the two appearances of k, for each k.
+///
+/// Variable x_v means "the two k's go into slots i and i+k+1", for every k in
+/// 1..=n and i in 1..=2n-k-1, numbered in that (k, then i) order. To break the
+/// left-right symmetry (reversing a solution gives another solution), the
+/// final option of the final digit, k = n at i = n-1 (touching the right
+/// boundary), is removed: its reversal is k = n at i = 1, which is kept. So
+/// there are 3n(n-1)/2 - 1 variables. Each digit k
+/// and each slot s must be covered exactly once; for each of these 3n
+/// constraints, one clause says "at least one" (all its variables positive)
+/// and binary clauses say "at most one" (¬x_u ¬x_v for every pair u < v). All
+/// digit constraints come first, then all slot constraints.
+inline auto
+langford( const BenchInfo *info, ssize_t n ) -> Bench
+{
+    // Stage 1: enumerate all placements; record which vars cover each digit
+    // and each slot. Both `digits` and `slots` are 1-based (index 0 unused):
+    // `digits[k]` for k in 1..=n and `slots[s]` for s in 1..=2n.
+    //
+    // This is Eq(11) on Page 189.
+    std::vector<std::vector<ssize_t>> digits( static_cast<size_t>( n + 1 ) );
+    std::vector<std::vector<ssize_t>> slots( static_cast<size_t>( 2 * n + 1 ) );
+    ssize_t                           v = 0;
+    for ( ssize_t k = 1; k <= n; k++ ) {
+        for ( ssize_t i = 1; i <= 2 * n - k - 1; i++ ) {
+            if ( k == n && i == n - 1 ) continue;  // Symmetry breaking.
+            v++;
+            digits[static_cast<size_t>( k )].push_back( v );
+            slots[static_cast<size_t>( i )].push_back( v );
+            slots[static_cast<size_t>( i + k + 1 )].push_back( v );
+        }
+    }
+    if ( static_cast<size_t>( v ) != info->num_vars )
+        TAOCP_EVAL_PANIC( "langford(%zd) has %zd vars, info says %zu", n, v,
+                          info->num_vars );
+
+    // Stage 2: emit the exactly-one clauses of each constraint.
+    //
+    // This is Eq(11) on Page 189.
+    Bench b{ *info, { }, { } };
+    auto  exactlyOne = [&b]( const std::vector<ssize_t> &vs ) {
+        size_t begin = b.clauses.size( );
+        for ( ssize_t u : vs ) b.clauses.push_back( Literal::newPos( u ) );
+        b.segments.push_back( { begin, b.clauses.size( ) } );
+        for ( size_t a = 0; a < vs.size( ); a++ ) {
+            for ( size_t c = a + 1; c < vs.size( ); c++ ) {
+                begin = b.clauses.size( );
+                b.clauses.push_back( Literal::newNeg( vs[a] ) );
+                b.clauses.push_back( Literal::newNeg( vs[c] ) );
+                b.segments.push_back( { begin, b.clauses.size( ) } );
+            }
+        }
+    };
+    for ( ssize_t k = 1; k <= n; k++ )
+        exactlyOne( digits[static_cast<size_t>( k )] );
+    for ( ssize_t s = 1; s <= 2 * n; s++ )
+        exactlyOne( slots[static_cast<size_t>( s )] );
+    return b;
+}
+
 }  // namespace detail
 
 inline auto
@@ -239,6 +302,7 @@ Bench::get( ID id ) -> Bench
             /*page=*/"188",
             /*eqn=*/"6",
             /*name=*/"rivest",
+            /*desc=*/"The shortest interesting formula in 3CNF.",
             /*num_vars=*/4,
             /*satisfiable=*/false,
         };
@@ -261,6 +325,7 @@ Bench::get( ID id ) -> Bench
             /*page=*/"188",
             /*eqn=*/"7",
             /*name=*/"rivest7",
+            /*desc=*/"Rivest's clauses without the last one",
             /*num_vars=*/4,
             /*satisfiable=*/true,
         };
@@ -281,10 +346,30 @@ Bench::get( ID id ) -> Bench
             /*page=*/"188",
             /*eqn=*/"9",
             /*name=*/"waerden(3,3;9)",
+            /*desc=*/
+            "A binary sequence of length 9 with no 3 equally spaced 0's and "
+            "no 3 equally spaced 1's.",
             /*num_vars=*/9,
             /*satisfiable=*/false,
         };
         return detail::waerden33( &info );
+    }
+    case ID::Langford3: {
+        BenchInfo info{
+            /*vol=*/"4b",
+            /*page=*/"189",
+            /*eqn=*/"11",
+            /*name=*/"langford(3)",
+            /*desc=*/
+            "Place two 1s, two 2s and two 3s into 6 slots so that exactly k "
+            "slots intervene between the two k's, for each k.",
+            // One var per placement (i, i+k+1) of k, i in 1..=2n-k-1: 4 for
+            // k=1, 3 for k=2, 2 for k=3. Minus 1 for (2,6) of k=3, dropped
+            // by symmetry (its reversal (1,5) is kept): 4+3+2-1 = 8.
+            /*num_vars=*/8,
+            /*satisfiable=*/true,
+        };
+        return detail::langford( &info, 3 );
     }
     case ID::Count:
         break;
@@ -303,6 +388,7 @@ printBenchInfo( const Bench *bench ) -> void
     ::printf( "    page: \"%s\",\n", info->page );
     ::printf( "    eqn: \"%s\",\n", info->eqn );
     ::printf( "    name: \"%s\",\n", info->name );
+    ::printf( "    desc: \"%s\",\n", info->desc );
     ::printf( "    num_vars: %zu,\n", info->num_vars );
     ::printf( "    satisfiable: %s,\n", info->satisfiable ? "true" : "false" );
     ::printf( "    num_clauses: %zu,\n", bench->segments.size( ) );

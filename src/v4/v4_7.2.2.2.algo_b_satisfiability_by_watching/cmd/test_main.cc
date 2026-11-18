@@ -159,7 +159,8 @@ FORGE_TEST( reverse )
     solver.emitClause( { literal( 3 ) } );
     solver.emitClause( { complement( literal( 2 ) ), literal( 1 ) } );
     solver.emitClause( { literal( 3 ), literal( 2 ) } );
-    solver.emitClause( { complement( literal( 3 ) ), complement( literal( 1 ) ) } );
+    solver.emitClause(
+        { complement( literal( 3 ) ), complement( literal( 1 ) ) } );
     solver.emitClause( { literal( 3 ), complement( literal( 1 ) ) } );
 
     auto res = solver.searchOneSolution( );

@@ -1,5 +1,5 @@
 // vim: ft=cpp
-// forge:v1
+// forge:skip
 //
 // Runs a SAT solver over every benchmark in `eval.h` and reports the results
 // in one consistent format. Header-only.

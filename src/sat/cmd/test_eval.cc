@@ -79,6 +79,7 @@ FORGE_TEST( get_returns_num_vars )
     EXPECT_TRUE( Bench::get( ID::Rivest ).info.num_vars == 4, "rivest" );
     EXPECT_TRUE( Bench::get( ID::Rivest7 ).info.num_vars == 4, "rivest7" );
     EXPECT_TRUE( Bench::get( ID::Waerden339 ).info.num_vars == 9, "waerden" );
+    EXPECT_TRUE( Bench::get( ID::Langford3 ).info.num_vars == 8, "langford" );
     return NULL;
 }
 
@@ -129,12 +130,16 @@ FORGE_TEST( clause_counts )
     auto w = Bench::get( ID::Waerden339 );
     EXPECT_TRUE( w.segments.size( ) == 32, "waerden segments" );
     EXPECT_TRUE( w.clauses.size( ) == 96, "waerden clauses" );
+    auto l = Bench::get( ID::Langford3 );
+    EXPECT_TRUE( l.segments.size( ) == 32, "langford segments" );
+    EXPECT_TRUE( l.clauses.size( ) == 70, "langford clauses" );
     return NULL;
 }
 
 FORGE_TEST( segments_tile_clauses )
 {
-    for ( auto id : { ID::Rivest, ID::Rivest7, ID::Waerden339 } ) {
+    for ( auto id :
+          { ID::Rivest, ID::Rivest7, ID::Waerden339, ID::Langford3 } ) {
         auto   b   = Bench::get( id );
         size_t pos = 0;
         for ( auto &seg : b.segments ) {
@@ -169,7 +174,8 @@ FORGE_TEST( all_unsatisfiable )
 
 FORGE_TEST( info_satisfiable_matches_brute_force )
 {
-    for ( auto id : { ID::Rivest, ID::Rivest7, ID::Waerden339 } ) {
+    for ( auto id :
+          { ID::Rivest, ID::Rivest7, ID::Waerden339, ID::Langford3 } ) {
         auto b = Bench::get( id );
         EXPECT_TRUE( b.info.satisfiable == satisfiable_by_brute_force( &b ),
                      "info.satisfiable mismatch" );
