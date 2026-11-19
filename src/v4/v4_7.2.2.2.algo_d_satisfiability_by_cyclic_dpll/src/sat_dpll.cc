@@ -55,6 +55,98 @@ DpllSolver::DpllSolver( size_t num_vars, const std::vector<Literal> *clauses,
     start_[0] = cells_.size( );
 }
 
+/* SAT_DPLL_F_FUNC( f, l ) sets f to 1 if some clause watched by literal l has
+ * all its other literals false under x (i.e., it would become a unit clause
+ * if l were false); otherwise sets f to 0.
+ *
+ * This is Answer of Ex 129 on Page 574. It is expanded more than once, so it
+ * uses `break` rather than goto labels (which would collide). Local names
+ * carry a trailing underscore to avoid shadowing the caller's variables. */
+#define SAT_DPLL_F_FUNC( f, l )                                      \
+    do {                                                             \
+        size_t j_ = watch_[( l )]; /* clause id */                   \
+        ( f )     = 0;                                               \
+        while ( j_ != 0 ) {                                          \
+            /* Inner loop of clause j_. */                           \
+            size_t p_ = start_[j_] + 1;                              \
+            while ( p_ != start_[j_ - 1] ) {                         \
+                size_t l_p_ = cells_[p_];                            \
+                size_t var_ = l_p_ >> 1;                             \
+                if ( x[var_] == ( l_p_ & 1 ) ) { /* l_p_ is false */ \
+                    p_++;                                            \
+                    continue;                                        \
+                }                                                    \
+                break;                                               \
+            }                                                        \
+            if ( p_ == start_[j_ - 1] ) {                            \
+                ( f ) = 1;                                           \
+                break;                                               \
+            }                                                        \
+            j_ = link_[j_];                                          \
+        }                                                            \
+    } while ( 0 )
+
+/* SAT_DPLL_CLEAR_WATCHLIST( l ) empties the watch list of literal l (which has
+ * just become false): every clause j on it gets a new watched literal that is
+ * not false under x, and j moves onto that literal's watch list. A variable
+ * that becomes newly watched while unset is inserted into the active ring.
+ *
+ * Reads and updates the caller's x, h, t and next. This is Answer of Ex 130
+ * on Page 574. The `vi` label is replaced by an if block so the macro has no
+ * goto labels. */
+#define SAT_DPLL_CLEAR_WATCHLIST( l )                                  \
+    do {                                                               \
+        Literal l_ = ( l );                                            \
+        size_t  j_ = watch_[l_]; /* clause id */                       \
+        watch_[l_] = 0;                                                \
+        while ( j_ != 0 ) {                                            \
+            /* (i) */                                                  \
+            size_t next_j_ = link_[j_];                                \
+            size_t i_      = start_[j_];                               \
+            size_t p_      = i_ + 1;                                   \
+                                                                       \
+            /* (ii) */                                                 \
+            while ( 1 ) {                                              \
+                size_t l_p_ = cells_[p_];                              \
+                size_t var_ = l_p_ >> 1;                               \
+                if ( x[var_] == ( l_p_ & 1 ) ) { /* l_p_ is false */   \
+                    p_++;                                              \
+                } else {                                               \
+                    break;                                             \
+                }                                                      \
+            }                                                          \
+            assert( p_ < start_[j_ - 1] ); /* TODO why? */             \
+                                                                       \
+            /* (iii) */                                                \
+            size_t next_watch_ = cells_[p_];                           \
+            cells_[p_]         = l_;                                   \
+            cells_[i_]         = next_watch_;                          \
+                                                                       \
+            /* (iv) */                                                 \
+            p_        = watch_[next_watch_];                           \
+            size_t q_ = watch_[( next_watch_ ^ 1 )];                   \
+            if ( p_ == 0 && q_ == 0 && x[next_watch_ >> 1] < 0 ) {     \
+                /* (v) insert next_watch_ into right */                \
+                if ( t == 0 ) {                                        \
+                    h       = ( next_watch_ >> 1 );                    \
+                    t       = h;                                       \
+                    next[t] = h;                                       \
+                } else {                                               \
+                    next[( next_watch_ >> 1 )] = h;                    \
+                    h                          = ( next_watch_ >> 1 ); \
+                    next[t]                    = h;                    \
+                }                                                      \
+            }                                                          \
+                                                                       \
+            /* (vi) insert j_ into watch list of next_watch_. */       \
+            link_[j_]           = p_;                                  \
+            watch_[next_watch_] = j_;                                  \
+                                                                       \
+            /* (vii) */                                                \
+            j_ = next_j_;                                              \
+        }                                                              \
+    } while ( 0 )
+
 auto
 DpllSolver::searchOneSolution( ) -> std::optional<std::vector<Literal>>
 {
@@ -96,55 +188,13 @@ D3:  // Look for unit clauses
 
         // Calcuate f.
         //
-        // It is a hand coded jump table to avoid calling a function side a hot
+        // SAT_DPLL_F_FUNC is a macro to avoid calling a function inside a hot
         // loop.
         //
         // This is Answer of Ex 129 on Page 574.
         size_t f_pos, f_neg;
-        size_t j;
-        {
-            Literal l = 2 * h;
-            size_t  f;
-            goto f_func;
-        f_calc:
-            if ( ( l & 1 ) == 0 ) {
-                f_pos = f;
-                l++;
-                goto f_func;
-            } else {
-                f_neg = f;
-                goto f_end;
-            }
-
-        f_func:
-            j = watch_[l];  // clause id
-            while ( j != 0 ) {
-                // Inner loop of clause j.
-                size_t p = start_[j] + 1;
-                while ( 1 ) {
-                    if ( p == start_[j - 1] ) goto subroutine_f_1;
-                    size_t l_p = cells_[p];
-                    size_t var = l_p >> 1;
-                    if ( x[var] == ( l_p & 1 ) ) {  // l_p is false
-                        p++;
-                        continue;
-                    }
-                    break;
-                }
-
-                j = link_[j];
-            }
-            f = 0;
-            goto subroutine_f_exit;
-
-        subroutine_f_1:
-            f = 1;
-        subroutine_f_exit:
-            goto f_calc;
-
-        f_end:
-            (void)0;
-        }
+        SAT_DPLL_F_FUNC( f_pos, 2 * h );
+        SAT_DPLL_F_FUNC( f_neg, 2 * h + 1 );
 
         size_t f = f_pos + 2 * f_neg;
         assert( f <= 3 );
@@ -191,61 +241,8 @@ D6:  // Update watches
     size_t b = ( m[d] + 1 ) % 2;
     x[k]     = ssize_t( b );  // -1 is allowed so ssize_t
 
-    {  // This is the answer to Ex 130 on Page 574
-        Literal l = 2 * k + b;
-        size_t  j = watch_[l];  // clause id
-        watch_[l] = 0;
-        while ( j != 0 ) {
-            // (i)
-            size_t next_j = link_[j];
-            size_t i      = start_[j];
-            size_t p      = i + 1;
-
-            // (ii)
-            while ( 1 ) {
-                size_t l_p = cells_[p];
-                size_t var = l_p >> 1;
-                if ( x[var] == ( l_p & 1 ) ) {  // l_p is false
-                    p++;
-                } else {
-                    break;
-                }
-            }
-            assert( p < start_[j - 1] );  // TODO why?
-
-            // (iii)
-            size_t next_watch = cells_[p];
-            cells_[p]         = l;
-            cells_[i]         = next_watch;
-
-            // (iv)
-            p        = watch_[next_watch];
-            size_t q = watch_[( next_watch ^ 1 )];
-            if ( p != 0 || q != 0 || x[next_watch >> 1] >= 0 ) {
-                goto vi;
-            }
-
-            // (v)
-            // insert next_watch into right
-            if ( t == 0 ) {
-                h       = ( next_watch >> 1 );
-                t       = h;
-                next[t] = h;
-            } else {
-                next[( next_watch >> 1 )] = h;
-                h                         = ( next_watch >> 1 );
-                next[t]                   = h;
-            }
-
-            // (vi)
-        vi:  // insert j into watch list of next_watch.
-            link_[j]           = p;
-            watch_[next_watch] = j;
-
-            // (vii)
-            j = next_j;
-        }
-    }
+    // This is the answer to Ex 130 on Page 574
+    SAT_DPLL_CLEAR_WATCHLIST( 2 * k + b );
 }
 
     goto D2;
@@ -301,5 +298,8 @@ happy_exit:
     }
     return result;
 }
+
+#undef SAT_DPLL_F_FUNC
+#undef SAT_DPLL_CLEAR_WATCHLIST
 
 }  // namespace taocp
