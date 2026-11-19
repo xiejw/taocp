@@ -1,7 +1,7 @@
 // vim: ft=cpp
 // forge:v1
 //
-// Algorithm D: Satisfiability by cyclic DPLL. Vol 4B Page 216.
+// Algorithm D: Satisfiability by cyclic DPLL. Vol 4B Page 217.
 #ifndef TAOCP_SRC_SAT_DPLL_H_
 #define TAOCP_SRC_SAT_DPLL_H_
 

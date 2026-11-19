@@ -1,15 +1,12 @@
 // forge:v1
 #include "sat_dpll.h"
 
+#include <assert.h>
 #include <stdio.h>
 
 #include "log.h"
 
 namespace taocp {
-
-namespace {
-constexpr bool kDebugMode = false;
-}  // namespace
 
 DpllSolver::DpllSolver( size_t num_vars, const std::vector<Literal> *clauses,
                         const std::vector<Segment> *segments )
@@ -61,123 +58,221 @@ DpllSolver::DpllSolver( size_t num_vars, const std::vector<Literal> *clauses,
 auto
 DpllSolver::searchOneSolution( ) -> std::optional<std::vector<Literal>>
 {
-    /* === --- This algorithm is Vol 4b, Page 216. ------------------ === */
+    /* === --- This algorithm is Vol 4b, Page 217. ------------------ === */
 
-B1:  // Init
-    size_t d = 1;
-    size_t n = num_vars_;
+D1:  // Initialize
+    size_t               d = 0;
+    size_t               h = 0;
+    size_t               t = 0;
+    size_t               n = num_vars_;
+    std::vector<size_t>  m( n + 1 );
+    std::vector<ssize_t> x( n + 1 );
+    std::vector<size_t>  next( n + 1 );
+    std::vector<size_t>  h_arr( n + 1 );
 
-    std::vector<size_t> m( n + 1 );
+    for ( size_t k = n; k >= 1; k-- ) {
+        x[k] = -1;  // unset value
+        if ( watch_[2 * k] != 0 || watch_[2 * k + 1] != 0 ) {
+            next[k] = h;
+            h       = k;
+            if ( t == 0 ) t = k;
+        }
+    }
 
-B2:  // Rejoice or choose
-    while ( d <= n ) {
-        m[d] = watch_[2 * d] == 0 || watch_[2 * d + 1] != 0;
-        // size_t l      = 2 * d + m[d];
-        size_t comp_l = 2 * d + ( m[d] ^ 1 );
+    if ( t != 0 ) {  // Complete the active ring.
+        next[t] = h;
+    }
 
-    B3:
-        /* B3 Remove C(l) if possible. Page 573. Ex 124 */
-        size_t j = watch_[comp_l];
+    size_t k;  // TODO Track the current position in the active ring.
 
-        if ( kDebugMode )
-            INFO(
-                "work at B3 at level d %zu to remove complement of "
-                "literal with starting clause %zu (comp l = %zu)",
-                d, j, comp_l );
+D2:  // Success?
+    if ( t == 0 ) goto happy_exit;
 
-        // j tracks the current clause watching the comp_l
+    k = t;
+
+D3:  // Look for unit clauses
+    while ( 1 ) {
+        h = next[k];
+
+        // Calcuate f. It is a hand coded jump table to avoid calling a
+        // function side a hot loop.
+        //
+        // This is Answer of Ex 129 on Page 574.
+        size_t f_pos, f_neg;
+        size_t j;
+        {
+            Literal l = 2 * h;
+            size_t  f;
+            goto f_func;
+        f_calc:
+            if ( ( l & 1 ) == 0 ) {
+                f_pos = f;
+                l++;
+                goto f_func;
+            } else {
+                f_neg = f;
+                goto f_end;
+            }
+
+        f_func:
+            j = watch_[l];  // clause id
+            while ( j != 0 ) {
+                // Inner loop of clause j.
+                size_t p = start_[j] + 1;
+                while ( 1 ) {
+                    if ( p == start_[j - 1] ) goto subroutine_f_1;
+                    size_t l_p = cells_[p];
+                    size_t var = l_p >> 1;
+                    if ( x[var] == ( l_p & 1 ) ) {  // l_p is false
+                        p++;
+                        continue;
+                    }
+                    break;
+                }
+
+                j = link_[j];
+            }
+            f = 0;
+            goto subroutine_f_exit;
+
+        subroutine_f_1:
+            f = 1;
+        subroutine_f_exit:
+            goto f_calc;
+
+        f_end:
+            (void)0;
+        }
+
+        size_t f = f_pos + 2 * f_neg;
+
+        if ( f == 3 ) goto D7;
+
+        if ( f > 0 ) {
+            m[d + 1] = f + 3;
+            t        = k;  // Mark ring end and continue from that next time.
+            goto D5;       // h is the var to consider next.
+        }
+
+        // Continue the active ring if not ended.
+        if ( h != t ) {
+            k = h;
+            continue;
+        } else {
+            break;
+        }
+    }
+
+D4:                      // Two-way branch
+    h        = next[t];  // h is the var to consider next.
+    m[d + 1] = ( watch_[2 * h] == 0 || watch_[2 * h + 1] != 0 );
+
+D5:  // Move on
+
+    // h is the var to consider.
+    d++;
+    k        = h;
+    h_arr[d] = h;
+
+    if ( t == k ) {
+        t = 0;  // Right is empty now.
+    } else {
+        // Delete k from ring.
+        h       = next[k];
+        next[t] = h;
+    }
+
+D6:  // Update watches
+
+{
+    size_t b = ( m[d] + 1 ) % 2;
+    x[k]     = ssize_t( b );  // -1 is allowed so ssize_t
+
+    {  // This is the answer to Ex 130 on Page 574
+        Literal l = 2 * k + b;
+        size_t  j = watch_[l];  // clause id
+        watch_[l] = 0;
         while ( j != 0 ) {
-            if ( kDebugMode ) {
-                INFO(
-                    "--> sub level B3 to work on clause j = "
-                    "%zu",
-                    j );
-            }
-            /* A literal other than comp_l should be watched in
-             * clause j. */
-
-            size_t begin  = start_[j];
-            size_t end    = start_[j - 1];  // start_[0] is valid.
+            // (i)
             size_t next_j = link_[j];
+            size_t i      = start_[j];
+            size_t p      = i + 1;
 
-            if ( kDebugMode ) {
-                if ( next_j > num_clauses_ ) {
-                    PANIC( "wrong next j" );
+            // (ii)
+            while ( 1 ) {
+                size_t l_p = cells_[p];
+                size_t var = l_p >> 1;
+                if ( x[var] == ( l_p & 1 ) ) {  // l_p is false
+                    p++;
+                } else {
+                    break;
                 }
             }
+            assert( p < start_[j - 1] );  // TODO why?
 
-            size_t k = begin + 1;
-            for ( ; k < end; k++ ) {
-                if ( kDebugMode )
-                    INFO(
-                        "--> --> sub level B3 clause j = "
-                        "%zu work on cell %zu (begin %zu, "
-                        "end %zu)",
-                        j, k, begin, end );
+            // (iii)
+            size_t next_watch = cells_[p];
+            cells_[p]         = l;
+            cells_[i]         = next_watch;
 
-                size_t new_l = cells_[k];
-
-                /* If new_l isn't false. Swap it to
-                 * beginning. */
-                if ( ( new_l >> 1 ) > d ||
-                     ( ( new_l + m[new_l >> 1] ) % 2 ) == 0 ) {
-                    cells_[begin] = new_l;
-                    cells_[k]     = comp_l;
-                    link_[j]      = watch_[new_l];
-                    watch_[new_l] = j;
-                    j             = next_j;
-                    break; /* This clause is done. */
-                }
+            // (iv)
+            p        = watch_[next_watch];
+            size_t q = watch_[( next_watch ^ 1 )];
+            if ( p != 0 || q != 0 || x[next_watch >> 1] >= 0 ) {
+                goto vi;
             }
 
-            if ( k == end ) {
-                /* Cannot stop watching on comp_l. */
-                watch_[comp_l] = j;
-                if ( kDebugMode )
-                    INFO(
-                        "cannot stop watching on "
-                        "complement of literal, go to B5 "
-                        "at level d %d",
-                        (int)d );
-                goto B5;
+            // (v)
+            // insert next_watch into right
+            if ( t == 0 ) {
+                h       = ( next_watch >> 1 );
+                t       = h;
+                next[t] = h;
+            } else {
+                next[( next_watch >> 1 )] = h;
+                h                         = ( next_watch >> 1 );
+                next[t]                   = h;
             }
+
+            // (vi)
+        vi:  // insert j into watch list of next_watch.
+            link_[j]           = p;
+            watch_[next_watch] = j;
+
+            // (vii)
+            j = next_j;
         }
+    }
+}
 
-    B4:  // Advance
-        watch_[comp_l] = 0;
-        d++;
-        if ( kDebugMode ) INFO( "advance to with B2 at level d %zu", d );
-        continue; /* Return to B2 */
+    goto D2;
 
-    B5:  // B5 Try again
-        if ( m[d] < 2 ) {
-            size_t new_md = 3 - m[d];
-            m[d]          = new_md;
-            // l             = 2 * d + ( new_md & 1 );
-            comp_l = 2 * d + ( ( new_md & 1 ) ^ 1 );
+D7:  // Backtrack
+    t = k;
+    while ( m[d] >= 2 ) {
+        k    = h_arr[d];
+        x[k] = -1;
 
-            if ( kDebugMode )
-                INFO(
-                    "try again with B3 at level d %zu and m[d] "
-                    "= %zu",
-                    d, new_md );
-            goto B3;
+        if ( watch_[2 * k] != 0 || watch_[2 * k + 1] != 0 ) {
+            // Put k back to ring.
+            next[k] = h;
+            h       = k;
+            next[t] = h;
         }
-
-    B6:  // Backtrack
-
-        if ( d == 1 ) return std::nullopt; /* Failed */
-
-        /* Otherwise */
         d--;
+    }
 
-        if ( kDebugMode ) INFO( "backtrack with B5 at level d %zu", d );
+D8:  // Failure?
+    if ( d > 0 ) {
+        m[d] = 3 - m[d];
+        k    = h_arr[d];
+        goto D6;
+    }
 
-        goto B5;
+    return std::nullopt;
 
-    }  // End of B2
-
-    // Translate m to results;
+happy_exit:
+    //  Translate m to results;
     std::vector<Literal> result( num_vars_ );
 
     for ( size_t i = 1; i <= num_vars_; i++ ) {
