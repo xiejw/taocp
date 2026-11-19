@@ -147,6 +147,42 @@ DpllSolver::DpllSolver( size_t num_vars, const std::vector<Literal> *clauses,
         }                                                              \
     } while ( 0 )
 
+// clang-format off
+/* Roles of k, h, t on entry to each step.
+ *
+ * One rule holds at every step: whenever the ring is not empty,
+ * h == NEXT(t). So t is the tail of the ring and h is its head.
+ *
+ * +-------+---------------------+------------------+------------------+------------------+
+ * | Label | Entered from        | k                | h                | t                |
+ * +-------+---------------------+------------------+------------------+------------------+
+ * | D3    | D2, or D3 repeating | ring var just    | set to NEXT(k);  | ring tail; ring  |
+ * |       |                     | checked; k = t   | the var checked  | is not empty     |
+ * |       |                     | on first entry   | this round       |                  |
+ * +-------+---------------------+------------------+------------------+------------------+
+ * | D4    | D3, when no ring    | not used         | set to NEXT(t),  | ring tail        |
+ * |       | var has a unit      |                  | the ring head =  |                  |
+ * |       | literal             |                  | branch var       |                  |
+ * +-------+---------------------+------------------+------------------+------------------+
+ * | D5    | D3 (forced value)   | old value; set   | var to set at    | ring tail; 0 if  |
+ * |       | or D4 (free choice) | to h here        | depth d+1, and   | k was the only   |
+ * |       |                     |                  | h == NEXT(t)     | ring var         |
+ * +-------+---------------------+------------------+------------------+------------------+
+ * | D6    | D5 or D8            | var to set at    | NEXT(t) when     | ring tail, or 0  |
+ * |       |                     | depth d; not in  | t != 0 (needed   | if ring is empty |
+ * |       |                     | the ring         | by watch-list    |                  |
+ * |       |                     |                  | macro step (v))  |                  |
+ * +-------+---------------------+------------------+------------------+------------------+
+ * | D7    | D3 with f == 3      | ring predecessor | var in conflict  | old value; reset |
+ * |       |                     | of var in        | (NEXT(k))        | to k so that     |
+ * |       |                     | conflict         |                  | h == NEXT(t)     |
+ * +-------+---------------------+------------------+------------------+------------------+
+ * | D8    | D7                  | set to h_arr[d]  | NEXT(t), after   | same as D7 left  |
+ * |       |                     | before going     | vars put back    | it               |
+ * |       |                     | back to D6       | by D7            |                  |
+ * +-------+---------------------+------------------+------------------+------------------+
+ */
+// clang-format on
 auto
 DpllSolver::searchOneSolution( ) -> std::optional<std::vector<Literal>>
 {
@@ -183,6 +219,19 @@ D2:  // Success?
     k = t;
 
 D3:  // Look for unit clauses
+    //
+    // Enter (from D2, or repeating D3):
+    //   - t: tail of the active ring; t != 0, so the ring is not empty.
+    //   - k: the ring var just examined. On the first entry k = t, so the scan
+    //        starts at the ring head NEXT(t) and walks the ring until h == t.
+    //   - h: recomputed as NEXT(k), the var examined in this round. Its old
+    //        value is not used.
+    //   - d: current depth. Vars h_arr[1..d] are set; ring vars are unset.
+    // Exit:
+    //   - f == 3   -> D7, h = conflicting var, k = its ring predecessor.
+    //   - f == 1,2 -> D5, h = forced var, t = k (so h == NEXT(t)),
+    //                 m[d+1] = 4,5.
+    //   - no units -> D4, h == t (k is t's predecessor; D4 uses neither).
     while ( 1 ) {
         h = next[k];
 
@@ -216,13 +265,25 @@ D3:  // Look for unit clauses
         }
     }
 
-D4:                      // Two-way branch
+D4:  // Two-way branch
+    //
+    // Enter (from D3 only): no ring var has a unit literal. t = ring tail
+    // (ring is non-empty). k is not used.
+    // Exit to D5: h = NEXT(t), the ring head, is the branch var; m[d+1] = 0
+    // (try true first) or 1 (try false first).
     h        = next[t];  // h is the var to consider next.
     m[d + 1] = ( watch_[2 * h] == 0 || watch_[2 * h + 1] != 0 );
 
 D5:  // Move on
-
-    // h is the var to consider.
+    //
+    // Enter (from D3 or D4):
+    //   - h: the var to set at depth d+1; h == NEXT(t), the ring head.
+    //   - t: ring tail (non-empty ring).
+    //   - k: stale. m[d+1] is already chosen.
+    // Exit to D6:
+    //   - d: incremented. k = h_arr[d] = the chosen var, now removed from ring.
+    //   - t: ring tail, or 0 if k was the only ring var.
+    //   - h: if t != 0, h == NEXT(t) is the new ring head.
     d++;
     k        = h;
     h_arr[d] = h;
@@ -236,6 +297,15 @@ D5:  // Move on
     }
 
 D6:  // Update watches
+     //
+     // Enter (from D5 or D8):
+     //   - k: the var to set at depth d (k == h_arr[d]); k is not in the ring.
+     //        m[d] gives its value: b = 1 (true) for m[d] even, else b = 0.
+     //   - t: ring tail, or 0 if the ring is empty.
+     //   - h: if t != 0, h == NEXT(t). SAT_DPLL_CLEAR_WATCHLIST needs this
+     //        when step (v) inserts a newly watched var at the ring head.
+     // Sets x[k] = b, moves the clauses off the now-false literal 2k+b, then
+     // returns to D2.
 
 {
     size_t b = ( m[d] + 1 ) % 2;
@@ -248,6 +318,19 @@ D6:  // Update watches
     goto D2;
 
 D7:  // Backtrack
+    //
+    // Enter (from D3 with f == 3 only): both literals of h = NEXT(k) are
+    // units, so the current partial assignment fails.
+    //   - k: a ring var with h == NEXT(k).
+    //   - t: stale tail. Setting t = k makes h the ring head, so
+    //        h == NEXT(t) holds again.
+    // Pops each depth whose choice is used up (m[d] >= 2: 2,3 = second try,
+    // 4,5 = forced). For each popped var: unset it, and if it is still
+    // watched, put it back at the ring head (between t and h). Unwatched vars
+    // are re-added later by SAT_DPLL_CLEAR_WATCHLIST step (v) once they are
+    // watched again.
+    // Exit to D8: m[d] is 0 or 1 (first try of a free choice), or d == 0
+    // (m[0] == 0 stops the loop). h == NEXT(t) still holds.
     t = k;
     while ( m[d] >= 2 ) {
         k    = h_arr[d];
@@ -264,6 +347,12 @@ D7:  // Backtrack
     assert( d >= 0 );  // m[d]==0 so the loop will stop.
 
 D8:  // Failure?
+    //
+    // Enter (from D7 only): t, h are as D7 leaves them (h == NEXT(t)), and
+    // m[d] < 2. If d > 0, flip the choice at depth d (0 -> 3, 1 -> 2) and
+    // set k = h_arr[d]. That var is not in the ring and x[k] still holds the
+    // old value, which matches D6's entry assumptions. If d == 0, every
+    // choice failed: unsatisfiable.
     assert( m[d] < 2 );
     if ( d > 0 ) {
         m[d] = 3 - m[d];
