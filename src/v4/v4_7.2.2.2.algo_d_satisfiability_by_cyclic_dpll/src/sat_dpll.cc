@@ -83,7 +83,7 @@ D1:  // Initialize
         next[t] = h;
     }
 
-    size_t k;  // TODO Track the current position in the active ring.
+    size_t k;  // Track the current position in the active ring.
 
 D2:  // Success?
     if ( t == 0 ) goto happy_exit;
@@ -94,8 +94,10 @@ D3:  // Look for unit clauses
     while ( 1 ) {
         h = next[k];
 
-        // Calcuate f. It is a hand coded jump table to avoid calling a
-        // function side a hot loop.
+        // Calcuate f.
+        //
+        // It is a hand coded jump table to avoid calling a function side a hot
+        // loop.
         //
         // This is Answer of Ex 129 on Page 574.
         size_t f_pos, f_neg;
@@ -145,6 +147,7 @@ D3:  // Look for unit clauses
         }
 
         size_t f = f_pos + 2 * f_neg;
+        assert( f <= 3 );
 
         if ( f == 3 ) goto D7;
 
@@ -261,8 +264,10 @@ D7:  // Backtrack
         }
         d--;
     }
+    assert( d >= 0 );  // m[d]==0 so the loop will stop.
 
 D8:  // Failure?
+    assert( m[d] < 2 );
     if ( d > 0 ) {
         m[d] = 3 - m[d];
         k    = h_arr[d];
@@ -275,15 +280,26 @@ happy_exit:
     //  Translate m to results;
     std::vector<Literal> result( num_vars_ );
 
+    // There are vars never in ring, so any value is ok
+    for ( size_t k = 1; k <= num_vars_; k++ )
+        result[k - 1] = complement( literal( k ) );  // free vars: arbitrary
+
+    // Now fill with vars in ring.
     for ( size_t i = 1; i <= num_vars_; i++ ) {
+        assert( m[i] <= 5 );          // See meaning on Page 218.
+        size_t result_id = h_arr[i];  // this is indirection.
+
+        assert( result_id >= 0 && result_id <= num_vars_ );
+        if ( result_id == 0 ) {
+            continue;  // never in right. value in result is set above.
+        }
         if ( m[i] & 1 ) {
-            result[i - 1] = complement( literal( i ) );
+            result[result_id - 1] = complement( literal( result_id ) );
         } else {
-            result[i - 1] = literal( i );
+            result[result_id - 1] = literal( result_id );
         }
     }
-
-    return result; /* Exit happily */
+    return result;
 }
 
 }  // namespace taocp

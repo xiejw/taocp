@@ -4,6 +4,7 @@
 #include "test_macros.h"
 
 using taocp::complement;
+using taocp::decodeVariable;
 using taocp::literal;
 using taocp::Literal;
 using taocp::Segment;
@@ -169,7 +170,7 @@ FORGE_TEST( simple )
     EXPECT_TRUE( res.value( ).size( ) == 3, "3 eles" );
     EXPECT_TRUE( res.value( )[0] == literal( 1 ), "[0] == 1" );
     EXPECT_TRUE( res.value( )[1] == literal( 2 ), "[1] == 2" );
-    EXPECT_TRUE( res.value( )[2] == complement( literal( 3 ) ), "[2] == c3" );
+    EXPECT_TRUE( decodeVariable( res.value( )[2] ) == 3, "var([2]) == 3" );
 }
 
 FORGE_TEST( reverse )
