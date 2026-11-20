@@ -62,6 +62,7 @@ and "uncovering" of rows and columns—incredibly efficient.
 | :--- |
 | V4 7.2.2.2A Satisfiability by Backtracking|
 | V4 7.2.2.2B Satisfiability by Watching|
+| V4 7.2.2.2D Satisfiability by cyclic DPLL|
 | V4 7.2.2.2C CDCL (WIP)|
 
 Algorithm A is a relatively straightforward backtracking algorithm augmented
@@ -82,6 +83,16 @@ only reacts when a watched literal changes, it avoids scanning every clause
 during backtracking and can quickly update watches to other non-false literals.
 This significantly reduces the computational overhead of undoing operations
 during a search.
+
+Algorithm D (cyclic DPLL) builds on Algorithm B by maintaining a ring of all
+variables that currently have watched literals. Before committing to a two-way
+branch, the algorithm examines every variable in the ring to determine whether
+any of them yields a unit clause. Forced moves from unit clauses can
+significantly reduce the branching factor, which saves a great deal of work in
+practice. However, this scan is expensive: in the worst case, each step costs
+one full pass over the ring together with every clause on the watch lists. A
+natural next step is to find a data structure that accelerates this unit-clause
+detection.
 
 
 ## Components and Traversal
